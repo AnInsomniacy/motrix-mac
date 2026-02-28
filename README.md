@@ -2,6 +2,8 @@
 
 A native macOS download manager built with SwiftUI, reimagined from the ground up based on [Motrix](https://github.com/agalwood/Motrix).
 
+<img width="936" height="636" alt="image" src="https://github.com/user-attachments/assets/2a01c1f0-66ea-4cb8-8154-5a44bb97e073" />
+
 While the original Motrix is a cross-platform Electron app, this project is a complete rewrite targeting macOS exclusively — delivering a lighter footprint, tighter system integration, and a truly native experience powered by aria2.
 
 ## Features
