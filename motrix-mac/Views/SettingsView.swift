@@ -72,6 +72,7 @@ struct SettingsView: View {
                         .truncationMode(.middle)
                         .foregroundStyle(.secondary)
                     Button("Browse") { pickDirectory() }
+                        .buttonStyle(MotrixButtonStyle(prominent: false))
                 }
                 Stepper("Max concurrent: \(config.maxConcurrentDownloads)", value: $config.maxConcurrentDownloads, in: 1...20)
                 Stepper("Connections per server: \(config.maxConnectionPerServer)", value: $config.maxConnectionPerServer, in: 1...16)

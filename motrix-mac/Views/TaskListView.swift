@@ -89,12 +89,8 @@ struct TaskListView: View {
         Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: 12))
-                .foregroundStyle(.white.opacity(0.5))
-                .frame(width: 28, height: 28)
-                .background(Color.white.opacity(0.06))
-                .clipShape(Circle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MotrixIconButtonStyle())
         .help(tip)
     }
 

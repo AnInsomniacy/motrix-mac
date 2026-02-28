@@ -57,7 +57,7 @@ struct AddTaskView: View {
                             .truncationMode(.middle)
                         Spacer()
                         Button("Browse") { pickDirectory() }
-                            .controlSize(.small)
+                            .buttonStyle(MotrixButtonStyle(prominent: false))
                     }
                     .padding(12)
                     .background(Color.white.opacity(0.05))
@@ -67,10 +67,10 @@ struct AddTaskView: View {
                         Spacer()
                         Button("Cancel") { close() }
                             .keyboardShortcut(.cancelAction)
+                            .buttonStyle(MotrixButtonStyle(prominent: false))
                         Button("Download") { submit() }
                             .keyboardShortcut(.defaultAction)
-                            .buttonStyle(.borderedProminent)
-                            .tint(.blue)
+                            .buttonStyle(MotrixButtonStyle(prominent: true))
                             .disabled(!canSubmit)
                     }
                 }
@@ -142,7 +142,7 @@ struct AddTaskView: View {
                             torrentFileName = ""
                             torrentFiles = []
                         }
-                        .controlSize(.small)
+                        .buttonStyle(MotrixButtonStyle(prominent: false))
                     }
                     HStack(spacing: 8) {
                         Text("\(selectedFileCount)/\(torrentFiles.count) files")

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct AboutView: View {
+    @Environment(\.openURL) private var openURL
     private let appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "-"
     private let buildVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "-"
 
@@ -41,10 +42,14 @@ struct AboutView: View {
                 )
 
                 HStack(spacing: 10) {
-                    Link("GitHub", destination: URL(string: "https://github.com/agalwood/Motrix")!)
-                        .buttonStyle(.borderedProminent)
-                    Link("aria2", destination: URL(string: "https://aria2.github.io/")!)
-                        .buttonStyle(.bordered)
+                    Button("GitHub") {
+                        openURL(URL(string: "https://github.com/agalwood/Motrix")!)
+                    }
+                    .buttonStyle(MotrixButtonStyle(prominent: true))
+                    Button("aria2") {
+                        openURL(URL(string: "https://aria2.github.io/")!)
+                    }
+                    .buttonStyle(MotrixButtonStyle(prominent: false))
                 }
             }
             .padding(24)
