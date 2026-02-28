@@ -7,9 +7,9 @@ struct MainWindow: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            Sidebar(onSelectSection: {
+            Sidebar(onSelectSection: { section in
                 withAnimation(.easeInOut(duration: 0.2)) {
-                    state.currentSection = $0
+                    state.currentSection = section
                 }
             })
 
