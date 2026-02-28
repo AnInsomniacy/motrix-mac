@@ -68,12 +68,8 @@ struct TaskRowView: View {
         Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: 11))
-                .foregroundStyle(.white.opacity(0.6))
-                .frame(width: 24, height: 24)
-                .background(Color.white.opacity(0.08))
-                .clipShape(RoundedRectangle(cornerRadius: 4))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MotrixIconButtonStyle())
     }
 
     private var progressInfo: some View {

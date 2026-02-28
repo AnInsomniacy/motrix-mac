@@ -62,7 +62,7 @@ struct MenuBarView: View {
                     }
                 }
             }
-                .buttonStyle(.plain)
+                .buttonStyle(MotrixButtonStyle(prominent: false))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 2)
             Button("Pause All") {
@@ -74,14 +74,14 @@ struct MenuBarView: View {
                     }
                 }
             }
-                .buttonStyle(.plain)
+                .buttonStyle(MotrixButtonStyle(prominent: false))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 2)
 
             Divider().padding(.horizontal, 8)
 
             Button("Quit Motrix") { NSApplication.shared.terminate(nil) }
-                .buttonStyle(.plain)
+                .buttonStyle(MotrixButtonStyle(prominent: false))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 2)
                 .padding(.bottom, 4)

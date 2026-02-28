@@ -123,30 +123,17 @@ struct SidebarIconButton: View {
         Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: 15, weight: .medium))
-                .foregroundStyle((isSelected ? Color.white : Color.white.opacity(0.75)))
-                .frame(width: 32, height: 32)
-                .contentShape(Rectangle())
-                .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(backgroundColor)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .strokeBorder(Color.white.opacity(isSelected ? 0.2 : (isHovered ? 0.14 : 0.06)), lineWidth: 1)
-                )
+                .frame(width: 30, height: 30)
                 .scaleEffect(isHovered ? 1.03 : 1.0)
                 .animation(.easeOut(duration: 0.12), value: isHovered)
+                .overlay(
+                    Circle()
+                        .fill(isSelected ? Color.blue.opacity(0.25) : .clear)
+                )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MotrixIconButtonStyle())
         .onHover { isHovered = $0 }
         .help(tip)
-    }
-
-    private var backgroundColor: Color {
-        if isSelected {
-            return .white.opacity(0.16)
-        }
-        return .white.opacity(isHovered ? 0.1 : 0.06)
     }
 }
 
