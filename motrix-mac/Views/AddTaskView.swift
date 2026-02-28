@@ -3,7 +3,6 @@ import UniformTypeIdentifiers
 
 struct AddTaskView: View {
     @Environment(AppState.self) private var state
-    @Environment(\.dismiss) private var dismiss
     let downloadService: DownloadService
 
     @State private var urlText = ""
@@ -245,7 +244,14 @@ struct AddTaskView: View {
                     .filter { !$0.isEmpty }
                     .map { ThunderLink.decode($0) }
                 for uri in uris {
-                    try? await downloadService.addUri(uris: [uri], options: options)
+                    do {
+                        try await downloadService.addUri(uris: [uri], options: options)
+                    } catch {
+                        await MainActor.run {
+                            state.presentError("Add URL failed: \(error.localizedDescription)")
+                        }
+                        return
+                    }
                 }
             } else if let data = torrentData {
                 var torrentOptions = options
@@ -253,7 +259,14 @@ struct AddTaskView: View {
                 if !selectedIndexes.isEmpty {
                     torrentOptions["select-file"] = selectedIndexes
                 }
-                try? await downloadService.addTorrent(data: data, options: torrentOptions)
+                do {
+                    try await downloadService.addTorrent(data: data, options: torrentOptions)
+                } catch {
+                    await MainActor.run {
+                        state.presentError("Add torrent failed: \(error.localizedDescription)")
+                    }
+                    return
+                }
             }
             close()
         }
@@ -261,7 +274,6 @@ struct AddTaskView: View {
 
     private func close() {
         state.currentSection = .tasks
-        dismiss()
     }
 
     private var selectedFileCount: Int {

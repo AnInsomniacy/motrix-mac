@@ -7,20 +7,29 @@ struct MainWindow: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            Sidebar(onSelectSection: { state.currentSection = $0 })
+            Sidebar(onSelectSection: {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    state.currentSection = $0
+                }
+            })
 
             ZStack {
                 switch state.currentSection {
                 case .tasks:
                     TaskListView(downloadService: downloadService)
+                        .transition(.opacity)
                 case .add:
                     AddTaskView(downloadService: downloadService)
+                        .transition(.opacity)
                 case .settings:
                     SettingsView()
+                        .transition(.opacity)
                 case .about:
                     AboutView()
+                        .transition(.opacity)
                 }
             }
+            .animation(.easeInOut(duration: 0.2), value: state.currentSection)
         }
         .frame(minWidth: 700, minHeight: 450)
         .background(
@@ -35,17 +44,21 @@ struct MainWindow: View {
         )
         .preferredColorScheme(.dark)
         .sheet(isPresented: Bindable(state).showTaskDetail) {
-            if let task = state.detailTask {
-                TaskDetailView(task: task)
+            if let gid = state.detailTaskGid {
+                TaskDetailView(taskGid: gid)
                     .preferredColorScheme(.dark)
             }
+        }
+        .alert("Operation Failed", isPresented: Bindable(state).showErrorAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(state.errorAlertMessage)
         }
         .onDrop(of: [.fileURL, .url, .utf8PlainText], isTargeted: nil) { providers in
             handleDrop(providers)
             return true
         }
     }
-
     private func handleDrop(_ providers: [NSItemProvider]) {
         for provider in providers {
             if provider.hasItemConformingToTypeIdentifier("public.file-url") {
@@ -68,7 +81,11 @@ struct MainWindow: View {
                           let text = String(data: data, encoding: .utf8) else { return }
                     Task { @MainActor in
                         let uri = ThunderLink.decode(text)
-                        try? await downloadService.addUri(uris: [uri])
+                        do {
+                            try await downloadService.addUri(uris: [uri])
+                        } catch {
+                            state.presentError("Add URL failed: \(error.localizedDescription)")
+                        }
                     }
                 }
             }

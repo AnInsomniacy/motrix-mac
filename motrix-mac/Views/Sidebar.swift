@@ -12,6 +12,7 @@ struct Sidebar: View {
                     .transition(.opacity)
             }
         }
+        .animation(.easeInOut(duration: 0.2), value: state.currentSection)
     }
 
     private var iconStrip: some View {
@@ -75,7 +76,11 @@ struct Sidebar: View {
                     count: count(for: filter),
                     isSelected: state.currentList == filter
                 )
-                .onTapGesture { state.currentList = filter }
+                .onTapGesture {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        state.currentList = filter
+                    }
+                }
             }
 
             Spacer()
@@ -101,8 +106,8 @@ struct Sidebar: View {
     private func count(for filter: TaskFilter) -> Int {
         switch filter {
         case .active: return state.globalStat.numActive + state.globalStat.numWaiting
-        case .completed: return state.completedTasks.count
-        case .stopped: return state.stoppedTasks.count
+        case .completed: return state.completedCount
+        case .stopped: return state.stoppedCount
         }
     }
 }

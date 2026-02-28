@@ -1,23 +1,35 @@
 import SwiftUI
 
 struct TaskDetailView: View {
-    let task: DownloadTask
+    @Environment(AppState.self) private var state
+    let taskGid: String
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-                .padding(20)
+        Group {
+            if let task {
+                VStack(spacing: 0) {
+                    header(task: task)
+                        .padding(20)
 
-            Divider().opacity(0.3)
+                    Divider().opacity(0.3)
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    progressSection
-                    filesSection
-                    infoSection
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 20) {
+                            progressSection(task: task)
+                            filesSection(task: task)
+                            infoSection(task: task)
+                        }
+                        .padding(20)
+                    }
                 }
-                .padding(20)
+            } else {
+                VStack(spacing: 12) {
+                    Text("Task no longer exists")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.secondary)
+                    Button("Close") { dismiss() }
+                }
             }
         }
         .frame(width: 480)
@@ -26,7 +38,11 @@ struct TaskDetailView: View {
         .preferredColorScheme(.dark)
     }
 
-    private var header: some View {
+    private var task: DownloadTask? {
+        state.taskIndex[taskGid]
+    }
+
+    private func header(task: DownloadTask) -> some View {
         HStack(spacing: 12) {
             FileTypeIcon(extension_: task.files.first?.fileExtension ?? "")
 
@@ -36,7 +52,7 @@ struct TaskDetailView: View {
                     .lineLimit(2)
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(statusColor)
+                        .fill(statusColor(for: task.status))
                         .frame(width: 6, height: 6)
                     Text(task.status.rawValue.capitalized)
                         .font(.system(size: 12))
@@ -51,7 +67,7 @@ struct TaskDetailView: View {
         }
     }
 
-    private var progressSection: some View {
+    private func progressSection(task: DownloadTask) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
@@ -59,7 +75,7 @@ struct TaskDetailView: View {
                         .fill(Color.white.opacity(0.06))
                         .frame(height: 6)
                     RoundedRectangle(cornerRadius: 3)
-                        .fill(statusColor)
+                        .fill(statusColor(for: task.status))
                         .frame(width: max(0, geo.size.width * task.progress), height: 6)
                 }
             }
@@ -89,7 +105,7 @@ struct TaskDetailView: View {
         }
     }
 
-    private var filesSection: some View {
+    private func filesSection(task: DownloadTask) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("FILES (\(task.files.count))")
                 .font(.system(size: 11, weight: .semibold))
@@ -124,7 +140,7 @@ struct TaskDetailView: View {
         }
     }
 
-    private var infoSection: some View {
+    private func infoSection(task: DownloadTask) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("DETAILS")
                 .font(.system(size: 11, weight: .semibold))
@@ -160,8 +176,8 @@ struct TaskDetailView: View {
         }
     }
 
-    private var statusColor: Color {
-        switch task.status {
+    private func statusColor(for status: TaskStatus) -> Color {
+        switch status {
         case .active: return .blue
         case .waiting, .paused: return .orange
         case .complete: return .green

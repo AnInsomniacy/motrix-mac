@@ -29,13 +29,15 @@ final class ConfigService {
         if safeMaxConnectionPerServer != maxConnectionPerServer {
             maxConnectionPerServer = safeMaxConnectionPerServer
         }
+        let downloadLimitValue = maxOverallDownloadLimit > 0 ? "\(maxOverallDownloadLimit)K" : "0"
+        let uploadLimitValue = maxOverallUploadLimit > 0 ? "\(maxOverallUploadLimit)K" : "0"
         var config: [String: String] = [
             "max-concurrent-downloads": "\(maxConcurrentDownloads)",
             "max-connection-per-server": "\(safeMaxConnectionPerServer)",
             "dir": downloadDir,
             "continue": "true",
-            "max-overall-download-limit": "\(maxOverallDownloadLimit)",
-            "max-overall-upload-limit": "\(maxOverallUploadLimit)",
+            "max-overall-download-limit": downloadLimitValue,
+            "max-overall-upload-limit": uploadLimitValue,
             "seed-ratio": "\(seedRatio)",
         ]
         if keepSeeding || seedRatio == 0 {
@@ -47,5 +49,11 @@ final class ConfigService {
             config["rpc-secret"] = rpcSecret
         }
         return config
+    }
+
+    func aria2RuntimeOptions() -> [String: String] {
+        var options = aria2SystemConfig()
+        options.removeValue(forKey: "rpc-secret")
+        return options
     }
 }

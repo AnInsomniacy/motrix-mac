@@ -3,10 +3,13 @@ import SwiftUI
 @Observable
 final class AppState {
     var tasks: [DownloadTask] = []
+    var taskIndex: [String: DownloadTask] = [:]
     var selectedGids: Set<String> = []
     var currentSection: MainSection = .tasks
     var currentList: TaskFilter = .active
     var globalStat = GlobalStat()
+    var completedCount = 0
+    var stoppedCount = 0
 
     var showAddTask: Bool {
         get { currentSection == .add }
@@ -23,7 +26,10 @@ final class AppState {
     var addTaskTorrentName = ""
 
     var showTaskDetail = false
-    var detailTask: DownloadTask?
+    var detailTaskGid: String?
+
+    var showErrorAlert = false
+    var errorAlertMessage = ""
 
     var pollingInterval: TimeInterval = 1.0
 
@@ -40,6 +46,21 @@ final class AppState {
     }
 
     var isDownloading: Bool { globalStat.numActive > 0 }
+
+    func upsertTasks(_ incoming: [DownloadTask]) {
+        for task in incoming {
+            taskIndex[task.gid] = task
+        }
+    }
+
+    func replaceTaskIndex(with incoming: [DownloadTask]) {
+        taskIndex = Dictionary(uniqueKeysWithValues: incoming.map { ($0.gid, $0) })
+    }
+
+    func presentError(_ message: String) {
+        errorAlertMessage = message
+        showErrorAlert = true
+    }
 
     func adjustPollingInterval() {
         let active = globalStat.numActive

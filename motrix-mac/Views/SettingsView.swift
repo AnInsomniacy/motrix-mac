@@ -28,10 +28,13 @@ struct SettingsView: View {
                     switch selectedTab {
                     case .basic:
                         basicTab
+                            .transition(.opacity)
                     case .advanced:
                         advancedTab
+                            .transition(.opacity)
                     }
                 }
+                .animation(.easeInOut(duration: 0.2), value: selectedTab)
                 .padding(20)
             }
             .background(

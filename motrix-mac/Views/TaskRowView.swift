@@ -103,35 +103,31 @@ struct TaskRowView: View {
 
     private var speedInfo: some View {
         HStack(spacing: 8) {
-            if task.status == .active {
-                if task.downloadSpeed > 0 {
-                    HStack(spacing: 2) {
-                        Image(systemName: "arrow.down")
-                            .font(.system(size: 9, weight: .bold))
-                        Text(ByteFormatter.speed(task.downloadSpeed))
-                            .font(.system(size: 11, design: .monospaced))
-                    }
-                    .foregroundStyle(.blue)
+            if task.status == .active || task.status == .waiting || task.status == .paused {
+                HStack(spacing: 2) {
+                    Image(systemName: "arrow.down")
+                        .font(.system(size: 9, weight: .bold))
+                    Text(ByteFormatter.speed(task.downloadSpeed))
+                        .font(.system(size: 11, design: .monospaced))
                 }
-                if task.uploadSpeed > 0 {
-                    HStack(spacing: 2) {
-                        Image(systemName: "arrow.up")
-                            .font(.system(size: 9, weight: .bold))
-                        Text(ByteFormatter.speed(task.uploadSpeed))
-                            .font(.system(size: 11, design: .monospaced))
-                    }
-                    .foregroundStyle(.green)
+                .foregroundStyle(task.downloadSpeed > 0 ? .blue : .secondary)
+
+                HStack(spacing: 2) {
+                    Image(systemName: "arrow.up")
+                        .font(.system(size: 9, weight: .bold))
+                    Text(ByteFormatter.speed(task.uploadSpeed))
+                        .font(.system(size: 11, design: .monospaced))
                 }
+                .foregroundStyle(task.uploadSpeed > 0 ? .green : .secondary)
+
                 if !task.remaining.isEmpty {
                     Text(task.remaining)
                         .font(.system(size: 11))
                         .foregroundStyle(.tertiary)
                 }
-                if task.connections > 0 {
-                    Text("\(task.connections) nodes")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                }
+                Text("\(task.connections) connections")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
             }
         }
     }

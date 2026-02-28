@@ -11,7 +11,12 @@ final class DownloadService {
     private var pollingTask: Task<Void, Never>?
     private var rpcAvailable = true
     private var rpcUnavailableSince: Date?
+    private let listPageSize = 500
+    private var terminalStatusSnapshot: [String: TaskStatus] = [:]
+    private var didBootstrapTerminalSnapshot = false
+    var onTaskTerminalUpdate: ((DownloadTask) -> Void)?
     var state: AppState
+    var isConnected: Bool { client != nil }
 
     init(state: AppState) {
         self.state = state
@@ -22,6 +27,12 @@ final class DownloadService {
         rpcAvailable = true
         rpcUnavailableSince = nil
         logger.info("connected to aria2 at \(Aria2Config.rpcHost):\(port)")
+    }
+
+    func disconnect() {
+        client = nil
+        rpcAvailable = true
+        rpcUnavailableSince = nil
     }
 
     func startPolling() {
@@ -42,48 +53,85 @@ final class DownloadService {
 
     @MainActor
     func refresh() async {
-        await fetchGlobalStat()
-        await fetchTaskList()
-        state.adjustPollingInterval()
-    }
-
-    @MainActor
-    func fetchGlobalStat() async {
         guard let client else { return }
         do {
-            let response: [String: Any] = try await call(client: client, method: .getGlobalStat)
-            state.globalStat = GlobalStat.from(response)
-            markRPCAvailable()
-        } catch {
-            markRPCUnavailable(error: error)
-        }
-    }
-
-    @MainActor
-    func fetchTaskList() async {
-        guard let client else { return }
-        do {
-            let method: Aria2Method
+            let snapshot = try await fetchSnapshot(client: client)
+            state.globalStat = snapshot.globalStat
+            state.completedCount = snapshot.completed.count
+            state.stoppedCount = snapshot.stopped.count
+            state.replaceTaskIndex(with: snapshot.indexed)
             switch state.currentList {
             case .active:
-                let active: [[String: Any]] = try await call(client: client, method: .tellActive)
-                let waiting: [[String: Any]] = try await callWithParams(client: client, method: .tellWaiting, params: [AnyEncodable(0), AnyEncodable(50)])
-                state.tasks = (active + waiting).map { DownloadTask.from($0) }
-                markRPCAvailable()
-                return
-            case .completed, .stopped:
-                method = .tellStopped
+                state.tasks = snapshot.active
+            case .completed:
+                state.tasks = snapshot.completed
+            case .stopped:
+                state.tasks = snapshot.stopped
             }
-            let result: [[String: Any]] = try await callWithParams(client: client, method: method, params: [AnyEncodable(0), AnyEncodable(50)])
-            state.tasks = result.map { DownloadTask.from($0) }
+            processTerminalEvents(snapshot.stopped)
+            state.adjustPollingInterval()
             markRPCAvailable()
         } catch {
             markRPCUnavailable(error: error)
+            state.adjustPollingInterval()
         }
+    }
+
+    private struct TaskSnapshot {
+        let globalStat: GlobalStat
+        let active: [DownloadTask]
+        let completed: [DownloadTask]
+        let stopped: [DownloadTask]
+        let indexed: [DownloadTask]
+    }
+
+    private func fetchSnapshot(client: Aria2) async throws -> TaskSnapshot {
+        let statResponse: [String: Any] = try await call(client: client, method: .getGlobalStat)
+        let globalStat = GlobalStat.from(statResponse)
+
+        let activeRaw: [[String: Any]] = try await call(client: client, method: .tellActive)
+        let waitingRaw: [[String: Any]] = try await fetchPagedEntries(client: client, method: .tellWaiting)
+        let stoppedRaw: [[String: Any]] = try await fetchPagedEntries(client: client, method: .tellStopped)
+
+        let active = (activeRaw + waitingRaw).map { DownloadTask.from($0) }
+        let stoppedAll = stoppedRaw.map { DownloadTask.from($0) }
+        let completed = stoppedAll.filter { $0.status == .complete }
+        let stopped = stoppedAll.filter { $0.status == .error || $0.status == .removed }
+
+        var taskMap: [String: DownloadTask] = [:]
+        for task in stoppedAll { taskMap[task.gid] = task }
+        for task in active { taskMap[task.gid] = task }
+
+        return TaskSnapshot(
+            globalStat: globalStat,
+            active: active,
+            completed: completed,
+            stopped: stopped,
+            indexed: Array(taskMap.values)
+        )
+    }
+
+    private func fetchPagedEntries(client: Aria2, method: Aria2Method) async throws -> [[String: Any]] {
+        var result: [[String: Any]] = []
+        var offset = 0
+        while true {
+            let page: [[String: Any]] = try await callWithParams(
+                client: client,
+                method: method,
+                params: [AnyEncodable(offset), AnyEncodable(listPageSize)]
+            )
+            if page.isEmpty { break }
+            result.append(contentsOf: page)
+            if page.count < listPageSize { break }
+            let previousOffset = offset
+            offset += page.count
+            if offset <= previousOffset { break }
+        }
+        return result
     }
 
     func addUri(uris: [String], options: [String: String] = [:]) async throws {
-        guard let client else { return }
+        let client = try requireClient()
         let _: String = try await callWithParams(
             client: client,
             method: .addUri,
@@ -93,7 +141,7 @@ final class DownloadService {
     }
 
     func addTorrent(data: Data, options: [String: String] = [:]) async throws {
-        guard let client else { return }
+        let client = try requireClient()
         let base64 = data.base64EncodedString()
         let _: String = try await callWithParams(
             client: client,
@@ -104,37 +152,37 @@ final class DownloadService {
     }
 
     func pauseTask(gid: String) async throws {
-        guard let client else { return }
+        let client = try requireClient()
         let _: String = try await callWithParams(client: client, method: .pause, params: [AnyEncodable(gid)])
         await refresh()
     }
 
     func resumeTask(gid: String) async throws {
-        guard let client else { return }
+        let client = try requireClient()
         let _: String = try await callWithParams(client: client, method: .unpause, params: [AnyEncodable(gid)])
         await refresh()
     }
 
     func removeTask(gid: String) async throws {
-        guard let client else { return }
+        let client = try requireClient()
         let _: String = try await callWithParams(client: client, method: .forceRemove, params: [AnyEncodable(gid)])
         await refresh()
     }
 
     func removeTaskRecord(gid: String) async throws {
-        guard let client else { return }
+        let client = try requireClient()
         let _: String = try await callWithParams(client: client, method: .removeDownloadResult, params: [AnyEncodable(gid)])
         await refresh()
     }
 
     func pauseAll() async throws {
-        guard let client else { return }
+        let client = try requireClient()
         let _: String = try await call(client: client, method: .forcePauseAll)
         await refresh()
     }
 
     func resumeAll() async throws {
-        guard let client else { return }
+        let client = try requireClient()
         let _: String = try await call(client: client, method: .unpauseAll)
         await refresh()
     }
@@ -150,9 +198,16 @@ final class DownloadService {
         let _: String? = try? await call(client: client, method: method)
     }
 
-    func changeGlobalOption(_ options: [String: String]) async {
-        guard let client else { return }
-        let _: String? = try? await callWithParams(client: client, method: .changeGlobalOption, params: [AnyEncodable(options)])
+    func changeGlobalOption(_ options: [String: String]) async throws {
+        let client = try requireClient()
+        let _: String = try await callWithParams(client: client, method: .changeGlobalOption, params: [AnyEncodable(options)])
+    }
+
+    private func requireClient() throws -> Aria2 {
+        guard let client else {
+            throw DownloadServiceError.notConnected
+        }
+        return client
     }
 
     private func call<T>(client: Aria2, method: Aria2Method) async throws -> T {
@@ -205,14 +260,33 @@ final class DownloadService {
         guard let since = rpcUnavailableSince else { return false }
         return Date().timeIntervalSince(since) >= timeout
     }
+
+    @MainActor
+    private func processTerminalEvents(_ tasks: [DownloadTask]) {
+        let current = Dictionary(uniqueKeysWithValues: tasks.map { ($0.gid, $0.status) })
+        defer {
+            terminalStatusSnapshot = current
+            didBootstrapTerminalSnapshot = true
+        }
+        guard didBootstrapTerminalSnapshot else { return }
+        for task in tasks {
+            guard task.status == .complete || task.status == .error else { continue }
+            let previous = terminalStatusSnapshot[task.gid]
+            if previous != task.status {
+                onTaskTerminalUpdate?(task)
+            }
+        }
+    }
 }
 
 enum DownloadServiceError: LocalizedError {
     case invalidResponse
+    case notConnected
 
     var errorDescription: String? {
         switch self {
         case .invalidResponse: return "Invalid response from aria2"
+        case .notConnected: return "Aria2 RPC is not connected"
         }
     }
 }

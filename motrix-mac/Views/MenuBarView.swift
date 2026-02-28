@@ -6,25 +6,33 @@ struct MenuBarView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                HStack(spacing: 4) {
-                    Image(systemName: "arrow.down")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(.blue)
-                    Text(ByteFormatter.speed(state.globalStat.downloadSpeed))
-                        .font(.system(size: 12, design: .monospaced))
+            if ConfigService.shared.traySpeedometer {
+                HStack {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.down")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.blue)
+                        Text(ByteFormatter.speed(state.globalStat.downloadSpeed))
+                            .font(.system(size: 12, design: .monospaced))
+                    }
+                    Spacer()
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.up")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.green)
+                        Text(ByteFormatter.speed(state.globalStat.uploadSpeed))
+                            .font(.system(size: 12, design: .monospaced))
+                    }
                 }
-                Spacer()
-                HStack(spacing: 4) {
-                    Image(systemName: "arrow.up")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(.green)
-                    Text(ByteFormatter.speed(state.globalStat.uploadSpeed))
-                        .font(.system(size: 12, design: .monospaced))
-                }
+                .padding(.horizontal, 12)
+                .padding(.top, 8)
+            } else {
+                Text("Motrix")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 12)
+                    .padding(.top, 8)
             }
-            .padding(.horizontal, 12)
-            .padding(.top, 8)
 
             Divider().padding(.horizontal, 8)
 
@@ -45,11 +53,27 @@ struct MenuBarView: View {
                 Divider().padding(.horizontal, 8)
             }
 
-            Button("Resume All") { Task { try? await downloadService.resumeAll() } }
+            Button("Resume All") {
+                Task {
+                    do {
+                        try await downloadService.resumeAll()
+                    } catch {
+                        state.presentError("Resume all failed: \(error.localizedDescription)")
+                    }
+                }
+            }
                 .buttonStyle(.plain)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 2)
-            Button("Pause All") { Task { try? await downloadService.pauseAll() } }
+            Button("Pause All") {
+                Task {
+                    do {
+                        try await downloadService.pauseAll()
+                    } catch {
+                        state.presentError("Pause all failed: \(error.localizedDescription)")
+                    }
+                }
+            }
                 .buttonStyle(.plain)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 2)

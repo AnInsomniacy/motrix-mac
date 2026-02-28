@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct TaskListView: View {
     @Environment(AppState.self) private var state
@@ -38,17 +39,35 @@ struct TaskListView: View {
 
             toolbarBtn("xmark", "Clear") {
                 for task in state.completedTasks {
-                    Task { try? await downloadService.removeTaskRecord(gid: task.gid) }
+                    Task {
+                        do {
+                            try await downloadService.removeTaskRecord(gid: task.gid)
+                        } catch {
+                            state.presentError("Clear failed: \(error.localizedDescription)")
+                        }
+                    }
                 }
             }
             toolbarBtn("arrow.clockwise", "Refresh") {
                 Task { await downloadService.refresh() }
             }
             toolbarBtn("play.fill", "Resume All") {
-                Task { try? await downloadService.resumeAll() }
+                Task {
+                    do {
+                        try await downloadService.resumeAll()
+                    } catch {
+                        state.presentError("Resume all failed: \(error.localizedDescription)")
+                    }
+                }
             }
             toolbarBtn("pause.fill", "Pause All") {
-                Task { try? await downloadService.pauseAll() }
+                Task {
+                    do {
+                        try await downloadService.pauseAll()
+                    } catch {
+                        state.presentError("Pause all failed: \(error.localizedDescription)")
+                    }
+                }
             }
         }
         .padding(.horizontal, 20)
@@ -81,25 +100,30 @@ struct TaskListView: View {
 
     @ViewBuilder
     private var content: some View {
-        if state.filteredTasks.isEmpty {
-            emptyState
-        } else {
-            ScrollView {
-                LazyVStack(spacing: 10) {
-                    ForEach(state.filteredTasks) { task in
-                        TaskRowView(
-                            task: task,
-                            onToggle: { toggleTask(task) },
-                            onRemove: { removeTask(task) }
-                        )
-                        .onTapGesture(count: 2) { showDetail(task) }
+        ZStack {
+            if state.filteredTasks.isEmpty {
+                emptyState
+                    .transition(.opacity)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 10) {
+                        ForEach(state.filteredTasks) { task in
+                            TaskRowView(
+                                task: task,
+                                onToggle: { toggleTask(task) },
+                                onRemove: { confirmRemoveTask(task) }
+                            )
+                            .onTapGesture(count: 2) { showDetail(task) }
+                        }
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 14)
+                    .padding(.bottom, 20)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 14)
-                .padding(.bottom, 20)
+                .transition(.opacity)
             }
         }
+        .animation(.easeInOut(duration: 0.2), value: state.currentList)
     }
 
     private var emptyState: some View {
@@ -147,27 +171,81 @@ struct TaskListView: View {
 
     private func toggleTask(_ task: DownloadTask) {
         Task {
-            if task.status == .active {
-                try? await downloadService.pauseTask(gid: task.gid)
-            } else {
-                try? await downloadService.resumeTask(gid: task.gid)
+            do {
+                if task.status == .active {
+                    try await downloadService.pauseTask(gid: task.gid)
+                } else {
+                    try await downloadService.resumeTask(gid: task.gid)
+                }
+            } catch {
+                state.presentError("Task action failed: \(error.localizedDescription)")
             }
         }
     }
 
-    private func removeTask(_ task: DownloadTask) {
+    private func confirmRemoveTask(_ task: DownloadTask) {
+        let alsoDeleteFiles = showDeleteConfirmation()
+        guard let alsoDeleteFiles else { return }
+        removeTask(task, deleteFiles: alsoDeleteFiles)
+    }
+
+    private func removeTask(_ task: DownloadTask, deleteFiles: Bool) {
         Task {
-            switch task.status {
-            case .complete, .error, .removed:
-                try? await downloadService.removeTaskRecord(gid: task.gid)
-            default:
-                try? await downloadService.removeTask(gid: task.gid)
+            do {
+                switch task.status {
+                case .complete, .error, .removed:
+                    try await downloadService.removeTaskRecord(gid: task.gid)
+                default:
+                    try await downloadService.removeTask(gid: task.gid)
+                }
+                if deleteFiles {
+                    deleteFilesForTask(task)
+                }
+            } catch {
+                state.presentError("Remove failed: \(error.localizedDescription)")
             }
+        }
+    }
+
+    private func showDeleteConfirmation() -> Bool? {
+        let alert = NSAlert()
+        alert.messageText = "Remove this task?"
+        alert.informativeText = "You can also delete downloaded files from disk."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Remove")
+        alert.addButton(withTitle: "Cancel")
+        let checkbox = NSButton(checkboxWithTitle: "Also delete files", target: nil, action: nil)
+        checkbox.state = .off
+        alert.accessoryView = checkbox
+        let response = alert.runModal()
+        if response != .alertFirstButtonReturn { return nil }
+        return checkbox.state == .on
+    }
+
+    private func deleteFilesForTask(_ task: DownloadTask) {
+        var candidates = Set(task.files.map(\.path).filter { !$0.isEmpty })
+        if candidates.isEmpty {
+            let fallback = (task.dir as NSString).appendingPathComponent(task.name)
+            candidates.insert(fallback)
+        }
+        var failures: [String] = []
+        for path in candidates {
+            let url = URL(fileURLWithPath: path)
+            do {
+                if FileManager.default.fileExists(atPath: url.path) {
+                    try FileManager.default.removeItem(at: url)
+                }
+            } catch {
+                failures.append(url.lastPathComponent)
+            }
+        }
+        if !failures.isEmpty {
+            state.presentError("Task removed, but failed to delete: \(failures.joined(separator: ", "))")
         }
     }
 
     private func showDetail(_ task: DownloadTask) {
-        state.detailTask = task
+        state.detailTaskGid = task.gid
         state.showTaskDetail = true
     }
 

@@ -1,6 +1,18 @@
 import Foundation
 
 struct Aria2Config: Sendable {
+    private static let supportedRuntimeKeys: Set<String> = [
+        "max-concurrent-downloads",
+        "max-connection-per-server",
+        "dir",
+        "continue",
+        "max-overall-download-limit",
+        "max-overall-upload-limit",
+        "seed-ratio",
+        "seed-time",
+        "rpc-secret",
+        "bt-tracker"
+    ]
     static let rpcPort: UInt16 = 16800
     static let rpcHost = "127.0.0.1"
 
@@ -49,7 +61,7 @@ struct Aria2Config: Sendable {
             args.append("--input-file=\(sessionPath.path)")
         }
 
-        for (key, value) in userConfig {
+        for (key, value) in userConfig where supportedRuntimeKeys.contains(key) {
             let v = "\(value)"
             if !v.isEmpty {
                 args.append("--\(key)=\(v)")
