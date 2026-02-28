@@ -33,13 +33,11 @@ struct AddTaskView: View {
                 }
 
                 VStack(spacing: 16) {
-                    Picker("", selection: $mode) {
-                        ForEach(AddMode.allCases, id: \.self) { m in
-                            Text(m.rawValue).tag(m)
-                        }
+                    HStack(spacing: 8) {
+                        modeButton(.url, icon: "link")
+                        modeButton(.torrent, icon: "doc")
                     }
-                    .pickerStyle(.segmented)
-                    .frame(width: 220)
+                    .frame(maxWidth: 260)
 
                     if mode == .url {
                         urlSection
@@ -210,6 +208,34 @@ struct AddTaskView: View {
         if mode == .url { return !urlText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
         if torrentData == nil { return false }
         return torrentFiles.isEmpty || selectedFileCount > 0
+    }
+
+    private func modeButton(_ target: AddMode, icon: String) -> some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                mode = target
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 11, weight: .medium))
+                    .frame(width: 14)
+                Text(target.rawValue)
+                    .font(.system(size: 12, weight: .semibold))
+            }
+            .foregroundStyle(mode == target ? .white : .white.opacity(0.72))
+            .frame(maxWidth: .infinity)
+            .frame(height: 30)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(mode == target ? Color.white.opacity(0.11) : Color.clear)
+            )
+        }
+        .buttonStyle(.plain)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .strokeBorder(mode == target ? Color.white.opacity(0.2) : Color.white.opacity(0.08), lineWidth: 1)
+        )
     }
 
     private func pickDirectory() {

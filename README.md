@@ -56,7 +56,7 @@ The app embeds a bundled `aria2c` binary and communicates with it over HTTP JSON
 ## Getting Started
 
 ```bash
-git clone https://github.com/yourname/motrix-mac.git
+git clone https://github.com/AnInsomniacy/motrix-mac.git
 cd motrix-mac
 open motrix-mac.xcodeproj
 ```
