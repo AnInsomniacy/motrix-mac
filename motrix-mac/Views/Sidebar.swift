@@ -43,8 +43,7 @@ struct Sidebar: View {
             }
             .padding(.bottom, 24)
         }
-        .padding(.leading, 50)
-        .frame(width: 64)
+        .frame(width: 80)
         .background(
             LinearGradient(
                 colors: [
@@ -72,16 +71,18 @@ struct Sidebar: View {
                 .padding(.bottom, 12)
 
             ForEach(TaskFilter.allCases, id: \.self) { filter in
-                CategoryRow(
-                    filter: filter,
-                    count: count(for: filter),
-                    isSelected: state.currentList == filter
-                )
-                .onTapGesture {
+                Button {
                     withAnimation(.easeInOut(duration: 0.2)) {
                         state.currentList = filter
                     }
+                } label: {
+                    CategoryRow(
+                        filter: filter,
+                        count: count(for: filter),
+                        isSelected: state.currentList == filter
+                    )
                 }
+                .buttonStyle(.plain)
             }
 
             Spacer()
@@ -180,10 +181,11 @@ struct CategoryRow: View {
         .padding(.vertical, 6)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(isSelected ? Color.white.opacity(0.11) : .clear)
+                .fill(isSelected ? Color.white.opacity(0.11) : Color.white.opacity(0.001))
         )
-        .contentShape(Rectangle())
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 8)
         .padding(.vertical, 2)
+        .contentShape(Rectangle())
     }
 }
