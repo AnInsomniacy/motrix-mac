@@ -41,11 +41,50 @@ struct AboutView: View {
                         .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
                 )
 
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Author")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.75))
+
+                    HStack(spacing: 12) {
+                        Image(systemName: "person.circle.fill")
+                            .font(.system(size: 28))
+                            .foregroundStyle(.white.opacity(0.6))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("AnInsomniac")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(.white)
+                            Text("github.com/AnInsomniacy")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.blue)
+                                .onTapGesture {
+                                    openURL(URL(string: "https://github.com/AnInsomniacy")!)
+                                }
+                        }
+                    }
+
+                    Text("This project is a ground-up rewrite of Motrix for macOS using SwiftUI. It is inspired by the original Motrix project by Dr_rOot but shares no Electron or Vue code.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.white.opacity(0.5))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(18)
+                .background(Color.white.opacity(0.04))
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                )
+
                 HStack(spacing: 10) {
                     Button("GitHub") {
-                        openURL(URL(string: "https://github.com/agalwood/Motrix")!)
+                        openURL(URL(string: "https://github.com/AnInsomniacy/motrix-mac")!)
                     }
                     .buttonStyle(MotrixButtonStyle(prominent: true))
+                    Button("Original Motrix") {
+                        openURL(URL(string: "https://github.com/agalwood/Motrix")!)
+                    }
+                    .buttonStyle(MotrixButtonStyle(prominent: false))
                     Button("aria2") {
                         openURL(URL(string: "https://aria2.github.io/")!)
                     }

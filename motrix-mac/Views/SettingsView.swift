@@ -15,13 +15,11 @@ struct SettingsView: View {
                     .foregroundStyle(.white.opacity(0.55))
             }
 
-            Picker("", selection: $selectedTab) {
-                ForEach(SettingsTab.allCases, id: \.self) { tab in
-                    Label(tab.title, systemImage: tab.icon).tag(tab)
-                }
+            HStack(spacing: 8) {
+                settingsTabButton(.basic)
+                settingsTabButton(.advanced)
             }
-            .pickerStyle(.segmented)
-            .frame(maxWidth: 360)
+            .frame(maxWidth: 280)
 
             ScrollView {
                 Group {
@@ -146,6 +144,34 @@ struct SettingsView: View {
         if panel.runModal() == .OK, let url = panel.url {
             config.downloadDir = url.path
         }
+    }
+
+    private func settingsTabButton(_ tab: SettingsTab) -> some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                selectedTab = tab
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: tab.icon)
+                    .font(.system(size: 11, weight: .medium))
+                    .frame(width: 14)
+                Text(tab.title)
+                    .font(.system(size: 12, weight: .semibold))
+            }
+            .foregroundStyle(selectedTab == tab ? .white : .white.opacity(0.72))
+            .frame(maxWidth: .infinity)
+            .frame(height: 30)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(selectedTab == tab ? Color.white.opacity(0.11) : Color.clear)
+            )
+        }
+        .buttonStyle(.plain)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .strokeBorder(selectedTab == tab ? Color.white.opacity(0.2) : Color.white.opacity(0.08), lineWidth: 1)
+        )
     }
 }
 

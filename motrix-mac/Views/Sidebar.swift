@@ -43,6 +43,7 @@ struct Sidebar: View {
             }
             .padding(.bottom, 24)
         }
+        .padding(.leading, 50)
         .frame(width: 64)
         .background(
             LinearGradient(
@@ -121,17 +122,27 @@ struct SidebarIconButton: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: icon)
-                .font(.system(size: 15, weight: .medium))
-                .frame(width: 30, height: 30)
-                .scaleEffect(isHovered ? 1.03 : 1.0)
-                .animation(.easeOut(duration: 0.12), value: isHovered)
-                .overlay(
-                    Circle()
-                        .fill(isSelected ? Color.blue.opacity(0.25) : .clear)
-                )
+            ZStack {
+                Circle()
+                    .fill(isSelected ? Color.blue.opacity(0.25) : (isHovered ? Color.white.opacity(0.1) : Color.white.opacity(0.08)))
+                    .frame(width: 30, height: 30)
+                    .overlay(
+                        Circle()
+                            .strokeBorder(Color.white.opacity(isSelected ? 0.22 : 0.12), lineWidth: 1)
+                    )
+                Image(systemName: icon)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(isSelected ? Color.white : Color.white.opacity(0.75))
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Rectangle())
+            .scaleEffect(isHovered ? 1.03 : 1.0)
+            .animation(.easeOut(duration: 0.12), value: isHovered)
         }
-        .buttonStyle(MotrixIconButtonStyle())
+        .frame(width: 64, height: 42)
+        .contentShape(Rectangle())
+        .background(Color.clear)
+        .buttonStyle(.plain)
         .onHover { isHovered = $0 }
         .help(tip)
     }
