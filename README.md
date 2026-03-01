@@ -1,4 +1,4 @@
-# Motrix for macOS<img width="256" height="256" alt="logo" src="https://github.com/user-attachments/assets/e371c634-a9a8-45f2-9526-86985733baa7" />
+# <img src="https://github.com/user-attachments/assets/e371c634-a9a8-45f2-9526-86985733baa7" width="36" height="36" alt="icon" /> Motrix-Mac
 
 
 A native macOS download manager built with SwiftUI, reimagined from the ground up based on [Motrix](https://github.com/agalwood/Motrix).
