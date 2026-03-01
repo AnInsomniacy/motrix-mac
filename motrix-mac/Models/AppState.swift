@@ -80,10 +80,11 @@ enum TaskFilter: String, CaseIterable {
     case stopped = "Stopped"
 
     var localizedTitle: String {
+        let lm = LanguageManager.shared
         switch self {
-        case .active: return String(localized: "Downloading")
-        case .completed: return String(localized: "Completed")
-        case .stopped: return String(localized: "Stopped")
+        case .active: return lm.localizedString("Downloading")
+        case .completed: return lm.localizedString("Completed")
+        case .stopped: return lm.localizedString("Stopped")
         }
     }
 

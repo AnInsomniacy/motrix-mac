@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @State private var config = ConfigService.shared
     @State private var selectedTab: SettingsTab = .basic
+    @State private var langManager = LanguageManager.shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -92,39 +93,14 @@ struct SettingsView: View {
 
                 settingsCard(icon: "desktopcomputer", title: "System") {
                     settingsRow("Language") {
-                        Picker("", selection: $config.appLanguage) {
-                            Text("System").tag("system")
+                        Picker("", selection: $langManager.currentLanguage) {
+                            Text(verbatim: "System").tag("system")
                             Text("English").tag("en")
                             Text("简体中文").tag("zh-Hans")
                             Text("日本語").tag("ja")
                         }
                         .labelsHidden()
                         .frame(width: 100)
-                        .onChange(of: config.appLanguage) { oldValue, newValue in
-                            let alert = NSAlert()
-                            alert.messageText = String(localized: "Restart Required")
-                            alert.informativeText = String(localized: "The app must restart to apply the new language. Cancel to keep the current language.")
-                            alert.alertStyle = .informational
-                            alert.addButton(withTitle: String(localized: "Restart"))
-                            alert.addButton(withTitle: String(localized: "Cancel"))
-                            if alert.runModal() == .alertFirstButtonReturn {
-                                if newValue == "system" {
-                                    UserDefaults.standard.removeObject(forKey: "AppleLanguages")
-                                } else {
-                                    UserDefaults.standard.set([newValue], forKey: "AppleLanguages")
-                                }
-                                UserDefaults.standard.synchronize()
-                                let task = Process()
-                                task.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-                                task.arguments = ["-n", Bundle.main.bundlePath]
-                                try? task.run()
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                    NSApplication.shared.terminate(nil)
-                                }
-                            } else {
-                                config.appLanguage = oldValue
-                            }
-                        }
                     }
                     Divider().opacity(0.3)
                     settingsRow("Start at login") {

@@ -44,7 +44,7 @@ struct TaskListView: View {
 
     private var toolbar: some View {
         HStack {
-            Text(state.currentList.rawValue)
+            Text(state.currentList.localizedTitle)
                 .font(.system(size: 20, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
 
@@ -333,13 +333,14 @@ struct TaskListView: View {
     }
 
     private func showDeleteConfirmation() -> Bool? {
+        let lm = LanguageManager.shared
         let alert = NSAlert()
-        alert.messageText = String(localized: "Remove this task?")
-        alert.informativeText = String(localized: "You can also delete downloaded files from disk.")
+        alert.messageText = lm.localizedString("Remove this task?")
+        alert.informativeText = lm.localizedString("You can also delete downloaded files from disk.")
         alert.alertStyle = .warning
-        alert.addButton(withTitle: String(localized: "Remove"))
-        alert.addButton(withTitle: String(localized: "Cancel"))
-        let checkbox = NSButton(checkboxWithTitle: String(localized: "Also delete files"), target: nil, action: nil)
+        alert.addButton(withTitle: lm.localizedString("Remove"))
+        alert.addButton(withTitle: lm.localizedString("Cancel"))
+        let checkbox = NSButton(checkboxWithTitle: lm.localizedString("Also delete files"), target: nil, action: nil)
         checkbox.state = .off
         alert.accessoryView = checkbox
         let response = alert.runModal()
@@ -348,13 +349,14 @@ struct TaskListView: View {
     }
 
     private func showBatchDeleteConfirmation(count: Int) -> Bool? {
+        let lm = LanguageManager.shared
         let alert = NSAlert()
-        alert.messageText = String(localized: "Remove \(count) tasks?")
-        alert.informativeText = String(localized: "This will remove all selected tasks. You can also delete their files.")
+        alert.messageText = lm.localizedString("Remove \(count) tasks?")
+        alert.informativeText = lm.localizedString("This will remove all selected tasks. You can also delete their files.")
         alert.alertStyle = .warning
-        alert.addButton(withTitle: String(localized: "Remove All"))
-        alert.addButton(withTitle: String(localized: "Cancel"))
-        let checkbox = NSButton(checkboxWithTitle: String(localized: "Also delete files"), target: nil, action: nil)
+        alert.addButton(withTitle: lm.localizedString("Remove All"))
+        alert.addButton(withTitle: lm.localizedString("Cancel"))
+        let checkbox = NSButton(checkboxWithTitle: lm.localizedString("Also delete files"), target: nil, action: nil)
         checkbox.state = .off
         alert.accessoryView = checkbox
         let response = alert.runModal()
@@ -434,10 +436,11 @@ struct TaskListView: View {
     }
 
     private var emptyTitle: String {
+        let lm = LanguageManager.shared
         switch state.currentList {
-        case .active: return String(localized: "No active downloads")
-        case .completed: return String(localized: "No completed downloads")
-        case .stopped: return String(localized: "No stopped downloads")
+        case .active: return lm.localizedString("No active downloads")
+        case .completed: return lm.localizedString("No completed downloads")
+        case .stopped: return lm.localizedString("No stopped downloads")
         }
     }
 }

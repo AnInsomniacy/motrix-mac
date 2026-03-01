@@ -16,6 +16,7 @@ struct MotrixApp: App {
     @State private var didRunAutoUpdateCheck = false
     @State private var hasStarted = false
     @State private var isBootingEngine = false
+    @State private var langManager = LanguageManager.shared
     private let protocolService = ProtocolService()
     private let trackerService = TrackerService()
     private let upnpService = UPnPService()
@@ -31,6 +32,7 @@ struct MotrixApp: App {
         WindowGroup {
             MainWindow(downloadService: downloadService)
                 .environment(appState)
+                .environment(\.locale, langManager.locale)
                 .onAppear {
                     appDelegate.shutdownHandler = { [self] in await self.shutdown() }
                     startup()
@@ -71,12 +73,14 @@ struct MotrixApp: App {
 
         Settings {
             SettingsView()
+                .environment(\.locale, langManager.locale)
                 .preferredColorScheme(.dark)
         }
 
         MenuBarExtra {
             MenuBarView(downloadService: downloadService)
                 .environment(appState)
+                .environment(\.locale, langManager.locale)
         } label: {
             Label("Motrix", systemImage: "arrow.down.circle")
         }

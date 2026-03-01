@@ -79,8 +79,9 @@ struct MainWindow: View {
             } else if provider.hasItemConformingToTypeIdentifier("public.url") {
                 provider.loadItem(forTypeIdentifier: "public.url", options: nil) { item, _ in
                     guard let url = item as? URL ?? (item as? Data).flatMap({ URL(dataRepresentation: $0, relativeTo: nil) }) else { return }
-                    let uri = ThunderLink.decode(url.absoluteString)
+                    let raw = url.absoluteString
                     Task { @MainActor in
+                        let uri = ThunderLink.decode(raw)
                         do {
                             try await downloadService.addUri(uris: [uri])
                         } catch {
