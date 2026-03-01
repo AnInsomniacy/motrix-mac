@@ -34,7 +34,7 @@ struct TaskDetailView: View {
             }
         }
         .padding(20)
-        .frame(width: 520)
+        .frame(width: 560)
         .frame(maxHeight: 600)
         .background(Color(nsColor: NSColor(white: 0.16, alpha: 1)))
         .preferredColorScheme(.dark)
