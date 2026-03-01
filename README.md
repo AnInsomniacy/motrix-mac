@@ -1,6 +1,6 @@
 # <img src="https://github.com/user-attachments/assets/e371c634-a9a8-45f2-9526-86985733baa7" width="36" height="36" alt="icon" /> Motrix-Mac
 
-**[Website](https://motrix-mac.pages.dev)** · **[Download](https://github.com/AnInsomniacy/motrix-mac/releases)** · **[Tech Stack](https://motrix-mac.pages.dev/#tech)**
+**<a href="https://motrix-mac.pages.dev" target="_blank">Website</a>** · **<a href="https://github.com/AnInsomniacy/motrix-mac/releases" target="_blank">Download</a>**
 
 A native macOS download manager built with SwiftUI, reimagined from the ground up based on [Motrix](https://github.com/agalwood/Motrix).
 
