@@ -11,9 +11,11 @@ struct Aria2Config: Sendable {
         "seed-ratio",
         "seed-time",
         "rpc-secret",
-        "bt-tracker"
+        "bt-tracker",
+        "listen-port"
     ]
     static let rpcPort: UInt16 = 16800
+    static let btListenPort: UInt16 = 16881
     static let rpcHost = "127.0.0.1"
 
     static var aria2cPath: URL {
@@ -54,6 +56,7 @@ struct Aria2Config: Sendable {
             "--dht-file-path=\(dhtPath.path)",
             "--dht-file-path6=\(dht6Path.path)",
             "--rpc-listen-port=\(rpcPort)",
+            "--listen-port=\(btListenPort)",
             "--dir=\(downloadsDir.path)"
         ]
 

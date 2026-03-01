@@ -55,20 +55,15 @@ final class DownloadService {
     func refresh() async {
         guard let client else { return }
         do {
-            let snapshot = try await fetchSnapshot(client: client)
+            let snapshot = try await fetchSnapshotOffMain(client: client)
             state.globalStat = snapshot.globalStat
             state.completedCount = snapshot.completed.count
             state.stoppedCount = snapshot.stopped.count
             state.replaceTaskIndex(with: snapshot.indexed)
-            switch state.currentList {
-            case .active:
-                state.tasks = snapshot.active
-            case .completed:
-                state.tasks = snapshot.completed
-            case .stopped:
-                state.tasks = snapshot.stopped
-            }
-            processTerminalEvents(snapshot.stopped)
+            state.allActive = snapshot.active
+            state.allCompleted = snapshot.completed
+            state.allStopped = snapshot.stopped
+            processTerminalEvents(snapshot.completed + snapshot.stopped)
             state.adjustPollingInterval()
             markRPCAvailable()
         } catch {
@@ -85,7 +80,7 @@ final class DownloadService {
         let indexed: [DownloadTask]
     }
 
-    private func fetchSnapshot(client: Aria2) async throws -> TaskSnapshot {
+    nonisolated private func fetchSnapshotOffMain(client: Aria2) async throws -> TaskSnapshot {
         let statResponse: [String: Any] = try await call(client: client, method: .getGlobalStat)
         let globalStat = GlobalStat.from(statResponse)
 
@@ -111,7 +106,7 @@ final class DownloadService {
         )
     }
 
-    private func fetchPagedEntries(client: Aria2, method: Aria2Method) async throws -> [[String: Any]] {
+    nonisolated private func fetchPagedEntries(client: Aria2, method: Aria2Method) async throws -> [[String: Any]] {
         var result: [[String: Any]] = []
         var offset = 0
         while true {
@@ -210,11 +205,11 @@ final class DownloadService {
         return client
     }
 
-    private func call<T>(client: Aria2, method: Aria2Method) async throws -> T {
+    nonisolated private func call<T>(client: Aria2, method: Aria2Method) async throws -> T {
         try await callWithParams(client: client, method: method, params: [])
     }
 
-    private func callWithParams<T>(client: Aria2, method: Aria2Method, params: [AnyEncodable] = []) async throws -> T {
+    nonisolated private func callWithParams<T>(client: Aria2, method: Aria2Method, params: [AnyEncodable] = []) async throws -> T {
         try await withCheckedThrowingContinuation { continuation in
             client.call(method: method, params: params)
                 .validate()

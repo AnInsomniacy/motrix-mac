@@ -107,7 +107,7 @@ struct MotrixApp: App {
                     syncTrackers()
                 }
                 if ConfigService.shared.enableUPnP {
-                    await upnpService.mapPort(Aria2Config.rpcPort)
+                    await upnpService.mapPort(Aria2Config.btListenPort)
                 }
             }
             startSettingsSync()
@@ -125,11 +125,22 @@ struct MotrixApp: App {
         dockBadgeTask = nil
         settingsSyncTask?.cancel()
         settingsSyncTask = nil
-        Task {
-            await downloadService.saveSession()
-            await downloadService.shutdown()
-            await upnpService.unmapPort()
+        let semaphore = DispatchSemaphore(value: 0)
+        let svc = downloadService
+        let upnp = upnpService
+        DispatchQueue.global(qos: .userInitiated).async {
+            let group = DispatchGroup()
+            group.enter()
+            Task {
+                await svc.saveSession()
+                await svc.shutdown()
+                await upnp.unmapPort()
+                group.leave()
+            }
+            group.wait()
+            semaphore.signal()
         }
+        semaphore.wait()
         downloadService.stopPolling()
         downloadService.disconnect()
         engine.stop()
@@ -237,8 +248,7 @@ struct MotrixApp: App {
     private func bootEngineAndConnect() async -> Bool {
         isBootingEngine = true
         defer { isBootingEngine = false }
-        let rawSecret = ConfigService.shared.rpcSecret
-        let secret = rawSecret.isEmpty ? nil : rawSecret
+        let secret: String? = ConfigService.shared.effectiveRPCSecret
 
         if await isRPCReady(secret: secret) {
             logger.info("aria2 rpc already available, attaching without spawning new process")
@@ -310,7 +320,7 @@ struct MotrixApp: App {
         }
         if force || snapshot.enableUPnP != lastAppliedSettings.enableUPnP {
             if snapshot.enableUPnP {
-                await upnpService.mapPort(Aria2Config.rpcPort)
+                await upnpService.mapPort(Aria2Config.btListenPort)
             } else {
                 await upnpService.unmapPort()
             }
@@ -363,7 +373,7 @@ struct MotrixApp: App {
 
     private func checkForUpdatesIfNeeded() async {
         guard ConfigService.shared.autoCheckUpdate else { return }
-        guard let url = URL(string: "https://api.github.com/repos/agalwood/Motrix/releases/latest") else { return }
+        guard let url = URL(string: "https://api.github.com/repos/AnInsomniacy/motrix-mac/releases/latest") else { return }
         do {
             var request = URLRequest(url: url)
             request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")

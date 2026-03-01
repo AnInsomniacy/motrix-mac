@@ -12,14 +12,30 @@
 		B31E6B702F52D8860033EDBC /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = AA100003BBBB00030000BBB3 /* LaunchAtLogin */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		B37F81EE2F53E97700B06FF6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B31E6B1F2F52D0720033EDBC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B31E6B262F52D0720033EDBC;
+			remoteInfo = "motrix-mac";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		B31E6B272F52D0720033EDBC /* motrix-mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = "motrix-mac.app"; path = Motrix.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B37F81EA2F53E97700B06FF6 /* MotrixTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MotrixTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B31E6B292F52D0720033EDBC /* motrix-mac */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "motrix-mac";
+			sourceTree = "<group>";
+		};
+		B37F81EB2F53E97700B06FF6 /* MotrixTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = MotrixTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -35,6 +51,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B37F81E72F53E97700B06FF6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -42,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				B31E6B292F52D0720033EDBC /* motrix-mac */,
+				B37F81EB2F53E97700B06FF6 /* MotrixTests */,
 				B31E6B282F52D0720033EDBC /* Products */,
 			);
 			sourceTree = "<group>";
@@ -50,6 +74,7 @@
 			isa = PBXGroup;
 			children = (
 				B31E6B272F52D0720033EDBC /* motrix-mac.app */,
+				B37F81EA2F53E97700B06FF6 /* MotrixTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -82,6 +107,29 @@
 			productReference = B31E6B272F52D0720033EDBC /* motrix-mac.app */;
 			productType = "com.apple.product-type.application";
 		};
+		B37F81E92F53E97700B06FF6 /* MotrixTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B37F81F22F53E97700B06FF6 /* Build configuration list for PBXNativeTarget "MotrixTests" */;
+			buildPhases = (
+				B37F81E62F53E97700B06FF6 /* Sources */,
+				B37F81E72F53E97700B06FF6 /* Frameworks */,
+				B37F81E82F53E97700B06FF6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B37F81EF2F53E97700B06FF6 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B37F81EB2F53E97700B06FF6 /* MotrixTests */,
+			);
+			name = MotrixTests;
+			packageProductDependencies = (
+			);
+			productName = MotrixTests;
+			productReference = B37F81EA2F53E97700B06FF6 /* MotrixTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -94,6 +142,10 @@
 				TargetAttributes = {
 					B31E6B262F52D0720033EDBC = {
 						CreatedOnToolsVersion = 26.3;
+					};
+					B37F81E92F53E97700B06FF6 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = B31E6B262F52D0720033EDBC;
 					};
 				};
 			};
@@ -117,12 +169,20 @@
 			projectRoot = "";
 			targets = (
 				B31E6B262F52D0720033EDBC /* motrix-mac */,
+				B37F81E92F53E97700B06FF6 /* MotrixTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		B31E6B252F52D0720033EDBC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B37F81E82F53E97700B06FF6 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -139,7 +199,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B37F81E62F53E97700B06FF6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B37F81EF2F53E97700B06FF6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B31E6B262F52D0720033EDBC /* motrix-mac */;
+			targetProxy = B37F81EE2F53E97700B06FF6 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		B31E6B302F52D0730033EDBC /* Debug */ = {
@@ -320,6 +395,50 @@
 			};
 			name = Release;
 		};
+		B37F81F02F53E97700B06FF6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = NPL825YZAC;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = SYSU.MotrixTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Motrix.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Motrix";
+			};
+			name = Debug;
+		};
+		B37F81F12F53E97700B06FF6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = NPL825YZAC;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = SYSU.MotrixTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Motrix.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Motrix";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -337,6 +456,15 @@
 			buildConfigurations = (
 				B31E6B332F52D0730033EDBC /* Debug */,
 				B31E6B342F52D0730033EDBC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B37F81F22F53E97700B06FF6 /* Build configuration list for PBXNativeTarget "MotrixTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B37F81F02F53E97700B06FF6 /* Debug */,
+				B37F81F12F53E97700B06FF6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

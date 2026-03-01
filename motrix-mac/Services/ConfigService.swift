@@ -24,6 +24,13 @@ final class ConfigService {
     @AppStorage("maxOverallUploadLimit") var maxOverallUploadLimit: Int = 0
     @AppStorage("rpcSecret") var rpcSecret: String = ""
 
+    var effectiveRPCSecret: String {
+        if rpcSecret.isEmpty {
+            rpcSecret = UUID().uuidString
+        }
+        return rpcSecret
+    }
+
     func aria2SystemConfig() -> [String: String] {
         let safeMaxConnectionPerServer = min(max(maxConnectionPerServer, 1), 16)
         if safeMaxConnectionPerServer != maxConnectionPerServer {
@@ -39,14 +46,12 @@ final class ConfigService {
             "max-overall-download-limit": downloadLimitValue,
             "max-overall-upload-limit": uploadLimitValue,
             "seed-ratio": "\(seedRatio)",
+            "rpc-secret": effectiveRPCSecret,
         ]
         if keepSeeding || seedRatio == 0 {
             config["seed-ratio"] = "0"
         } else {
             config["seed-time"] = "\(seedTime)"
-        }
-        if !rpcSecret.isEmpty {
-            config["rpc-secret"] = rpcSecret
         }
         return config
     }

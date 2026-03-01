@@ -2,7 +2,9 @@ import SwiftUI
 
 @Observable
 final class AppState {
-    var tasks: [DownloadTask] = []
+    var allActive: [DownloadTask] = []
+    var allCompleted: [DownloadTask] = []
+    var allStopped: [DownloadTask] = []
     var taskIndex: [String: DownloadTask] = [:]
     var selectedGids: Set<String> = []
     var currentSection: MainSection = .tasks
@@ -33,15 +35,15 @@ final class AppState {
 
     var pollingInterval: TimeInterval = 1.0
 
-    var activeTasks: [DownloadTask] { tasks.filter { $0.status == .active || $0.status == .waiting || $0.status == .paused } }
-    var completedTasks: [DownloadTask] { tasks.filter { $0.status == .complete } }
-    var stoppedTasks: [DownloadTask] { tasks.filter { $0.status == .error || $0.status == .removed } }
+    var activeTasks: [DownloadTask] { allActive }
+    var completedTasks: [DownloadTask] { allCompleted }
+    var stoppedTasks: [DownloadTask] { allStopped }
 
     var filteredTasks: [DownloadTask] {
         switch currentList {
-        case .active: return activeTasks
-        case .completed: return completedTasks
-        case .stopped: return stoppedTasks
+        case .active: return allActive
+        case .completed: return allCompleted
+        case .stopped: return allStopped
         }
     }
 

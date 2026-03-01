@@ -60,7 +60,7 @@ struct DownloadTask: Identifiable, Equatable {
         lhs.gid == rhs.gid
     }
 
-    static func from(_ dict: [String: Any]) -> DownloadTask {
+    nonisolated static func from(_ dict: [String: Any]) -> DownloadTask {
         let files = (dict["files"] as? [[String: Any]])?.map { TaskFile.from($0) } ?? []
         var btInfo: BTInfo?
         if let bt = dict["bittorrent"] as? [String: Any] {
@@ -117,7 +117,7 @@ struct TaskFile: Identifiable {
         (fileName as NSString).pathExtension.lowercased()
     }
 
-    static func from(_ dict: [String: Any]) -> TaskFile {
+    nonisolated static func from(_ dict: [String: Any]) -> TaskFile {
         let uriList = (dict["uris"] as? [[String: Any]])?.compactMap { $0["uri"] as? String } ?? []
         return TaskFile(
             index: Int(dict["index"] as? String ?? "1") ?? 1,
@@ -145,7 +145,7 @@ struct GlobalStat {
     var numWaiting: Int = 0
     var numStopped: Int = 0
 
-    static func from(_ dict: [String: Any]) -> GlobalStat {
+    nonisolated static func from(_ dict: [String: Any]) -> GlobalStat {
         GlobalStat(
             downloadSpeed: Int64(dict["downloadSpeed"] as? String ?? "0") ?? 0,
             uploadSpeed: Int64(dict["uploadSpeed"] as? String ?? "0") ?? 0,
