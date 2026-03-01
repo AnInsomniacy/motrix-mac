@@ -24,6 +24,7 @@ final class ConfigService {
     @AppStorage("maxOverallUploadLimit") var maxOverallUploadLimit: Int = 0
     @AppStorage("speedLimitEnabled") var speedLimitEnabled: Bool = false
     @AppStorage("rpcSecret") var rpcSecret: String = ""
+    @AppStorage("appLanguage") var appLanguage: String = "system"
 
     var effectiveRPCSecret: String {
         if rpcSecret.isEmpty {

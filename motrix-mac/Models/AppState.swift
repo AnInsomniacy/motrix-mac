@@ -79,6 +79,14 @@ enum TaskFilter: String, CaseIterable {
     case completed = "Completed"
     case stopped = "Stopped"
 
+    var localizedTitle: String {
+        switch self {
+        case .active: return String(localized: "Downloading")
+        case .completed: return String(localized: "Completed")
+        case .stopped: return String(localized: "Stopped")
+        }
+    }
+
     var systemImage: String {
         switch self {
         case .active: return "arrow.down.circle"

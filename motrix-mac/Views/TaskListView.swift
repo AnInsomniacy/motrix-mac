@@ -33,6 +33,10 @@ struct TaskListView: View {
             )
         )
         .onChange(of: state.currentList) { _, _ in selectedGIDs.removeAll() }
+        .onChange(of: state.filteredTasks) { _, newTasks in
+            let validGIDs = Set(newTasks.map(\.gid))
+            selectedGIDs.formIntersection(validGIDs)
+        }
         .sheet(item: $detailTask) { task in
             TaskDetailView(task: task)
         }
@@ -330,12 +334,12 @@ struct TaskListView: View {
 
     private func showDeleteConfirmation() -> Bool? {
         let alert = NSAlert()
-        alert.messageText = "Remove this task?"
-        alert.informativeText = "You can also delete downloaded files from disk."
+        alert.messageText = String(localized: "Remove this task?")
+        alert.informativeText = String(localized: "You can also delete downloaded files from disk.")
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "Remove")
-        alert.addButton(withTitle: "Cancel")
-        let checkbox = NSButton(checkboxWithTitle: "Also delete files", target: nil, action: nil)
+        alert.addButton(withTitle: String(localized: "Remove"))
+        alert.addButton(withTitle: String(localized: "Cancel"))
+        let checkbox = NSButton(checkboxWithTitle: String(localized: "Also delete files"), target: nil, action: nil)
         checkbox.state = .off
         alert.accessoryView = checkbox
         let response = alert.runModal()
@@ -345,12 +349,12 @@ struct TaskListView: View {
 
     private func showBatchDeleteConfirmation(count: Int) -> Bool? {
         let alert = NSAlert()
-        alert.messageText = "Remove \(count) tasks?"
-        alert.informativeText = "This will remove all selected tasks. You can also delete their files."
+        alert.messageText = String(localized: "Remove \(count) tasks?")
+        alert.informativeText = String(localized: "This will remove all selected tasks. You can also delete their files.")
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "Remove All")
-        alert.addButton(withTitle: "Cancel")
-        let checkbox = NSButton(checkboxWithTitle: "Also delete files", target: nil, action: nil)
+        alert.addButton(withTitle: String(localized: "Remove All"))
+        alert.addButton(withTitle: String(localized: "Cancel"))
+        let checkbox = NSButton(checkboxWithTitle: String(localized: "Also delete files"), target: nil, action: nil)
         checkbox.state = .off
         alert.accessoryView = checkbox
         let response = alert.runModal()
@@ -431,9 +435,9 @@ struct TaskListView: View {
 
     private var emptyTitle: String {
         switch state.currentList {
-        case .active: return "No active downloads"
-        case .completed: return "No completed downloads"
-        case .stopped: return "No stopped downloads"
+        case .active: return String(localized: "No active downloads")
+        case .completed: return String(localized: "No completed downloads")
+        case .stopped: return String(localized: "No stopped downloads")
         }
     }
 }

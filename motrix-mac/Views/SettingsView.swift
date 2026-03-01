@@ -91,6 +91,24 @@ struct SettingsView: View {
                 }
 
                 settingsCard(icon: "desktopcomputer", title: "System") {
+                    settingsRow("Language") {
+                        Picker("", selection: $config.appLanguage) {
+                            Text("System").tag("system")
+                            Text("English").tag("en")
+                            Text("简体中文").tag("zh-Hans")
+                            Text("日本語").tag("ja")
+                        }
+                        .labelsHidden()
+                        .frame(width: 100)
+                        .onChange(of: config.appLanguage) { _, newValue in
+                            if newValue == "system" {
+                                UserDefaults.standard.removeObject(forKey: "AppleLanguages")
+                            } else {
+                                UserDefaults.standard.set([newValue], forKey: "AppleLanguages")
+                            }
+                        }
+                    }
+                    Divider().opacity(0.3)
                     settingsRow("Start at login") {
                         Toggle("", isOn: $config.openAtLogin).toggleStyle(.switch).labelsHidden()
                     }
@@ -213,7 +231,7 @@ struct SettingsView: View {
     }
 
     @ViewBuilder
-    private func settingsCard<Content: View>(icon: String, title: String, @ViewBuilder content: () -> Content) -> some View {
+    private func settingsCard<Content: View>(icon: String, title: LocalizedStringKey, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
                 Image(systemName: icon)
@@ -222,9 +240,10 @@ struct SettingsView: View {
                     .frame(width: 24, height: 24)
                     .background(Color.blue.opacity(0.12))
                     .clipShape(RoundedRectangle(cornerRadius: 6))
-                Text(title.uppercased())
+                Text(title)
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.55))
+                    .textCase(.uppercase)
             }
             VStack(alignment: .leading, spacing: 8) {
                 content()
@@ -240,7 +259,7 @@ struct SettingsView: View {
         )
     }
 
-    private func settingsRow<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
+    private func settingsRow<Content: View>(_ label: LocalizedStringKey, @ViewBuilder content: () -> Content) -> some View {
         HStack {
             Text(label)
                 .font(.system(size: 12))
@@ -285,7 +304,7 @@ private extension SettingsView {
         case basic
         case advanced
 
-        var title: String {
+        var title: LocalizedStringKey {
             switch self {
             case .basic: return "Basic"
             case .advanced: return "Advanced"

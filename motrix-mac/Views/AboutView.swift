@@ -9,7 +9,7 @@ struct AboutView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("About Motrix")
+                    Text("About Motrix-Mac")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                     Text("A clean, high-performance download manager powered by aria2")

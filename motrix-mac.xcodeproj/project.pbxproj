@@ -23,7 +23,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		B31E6B272F52D0720033EDBC /* motrix-mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = "motrix-mac.app"; path = Motrix.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B31E6B272F52D0720033EDBC /* motrix-mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "motrix-mac.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B37F81EA2F53E97700B06FF6 /* MotrixTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MotrixTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -155,6 +155,8 @@
 			knownRegions = (
 				en,
 				Base,
+				"zh-Hans",
+				ja,
 			);
 			mainGroup = B31E6B1E2F52D0720033EDBC;
 			minimizedProjectReferenceProxies = 1;

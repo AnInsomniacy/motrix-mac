@@ -161,7 +161,7 @@ struct CategoryRow: View {
                 .foregroundStyle(isSelected ? .white : .white.opacity(0.5))
                 .frame(width: 20)
 
-            Text(filter.rawValue)
+            Text(filter.localizedTitle)
                 .font(.system(size: 13))
                 .foregroundStyle(isSelected ? .white : .white.opacity(0.7))
 
