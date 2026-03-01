@@ -536,6 +536,43 @@
             transform: none
         }
 
+        @keyframes entrance {
+            from {
+                opacity: 0;
+                transform: translateY(24px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        nav {
+            animation: entrance .6s ease both;
+            animation-delay: .1s;
+        }
+
+        .hero-label {
+            animation: entrance .6s ease both;
+            animation-delay: .25s;
+        }
+
+        .hero h1 {
+            animation: entrance .7s ease both;
+            animation-delay: .4s;
+        }
+
+        .hero-desc {
+            animation: entrance .7s ease both;
+            animation-delay: .55s;
+        }
+
+        .hero-actions {
+            animation: entrance .6s ease both;
+            animation-delay: .7s;
+        }
+
         @media(max-width:640px) {
 
             .feature-row,
@@ -587,6 +624,14 @@
                 opacity: 1;
                 transform: none;
                 transition: none
+            }
+
+            nav,
+            .hero-label,
+            .hero h1,
+            .hero-desc,
+            .hero-actions {
+                animation: none;
             }
 
             .bg-field {
