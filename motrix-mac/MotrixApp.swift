@@ -33,6 +33,7 @@ struct MotrixApp: App {
             MainWindow(downloadService: downloadService)
                 .environment(appState)
                 .environment(\.locale, langManager.locale)
+                .animation(.easeInOut(duration: 0.3), value: langManager.currentLanguage)
                 .onAppear {
                     appDelegate.shutdownHandler = { [self] in await self.shutdown() }
                     startup()
@@ -74,6 +75,7 @@ struct MotrixApp: App {
         Settings {
             SettingsView()
                 .environment(\.locale, langManager.locale)
+                .animation(.easeInOut(duration: 0.3), value: langManager.currentLanguage)
                 .preferredColorScheme(.dark)
         }
 
@@ -81,6 +83,7 @@ struct MotrixApp: App {
             MenuBarView(downloadService: downloadService)
                 .environment(appState)
                 .environment(\.locale, langManager.locale)
+                .animation(.easeInOut(duration: 0.3), value: langManager.currentLanguage)
         } label: {
             Label("Motrix", systemImage: "arrow.down.circle")
         }
