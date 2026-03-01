@@ -56,9 +56,6 @@ struct DownloadTask: Identifiable, Equatable {
         )
     }
 
-    static func == (lhs: DownloadTask, rhs: DownloadTask) -> Bool {
-        lhs.gid == rhs.gid
-    }
 
     nonisolated static func from(_ dict: [String: Any]) -> DownloadTask {
         let files = (dict["files"] as? [[String: Any]])?.map { TaskFile.from($0) } ?? []
@@ -93,7 +90,7 @@ struct DownloadTask: Identifiable, Equatable {
     }
 }
 
-struct TaskFile: Identifiable {
+struct TaskFile: Identifiable, Equatable {
     let index: Int
     let path: String
     let length: Int64
@@ -130,8 +127,8 @@ struct TaskFile: Identifiable {
     }
 }
 
-struct BTInfo {
-    struct Info {
+struct BTInfo: Equatable {
+    struct Info: Equatable {
         let name: String
     }
     let announceList: [String]

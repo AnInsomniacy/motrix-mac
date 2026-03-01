@@ -37,8 +37,15 @@ final class ConfigService {
         if safeMaxConnectionPerServer != maxConnectionPerServer {
             maxConnectionPerServer = safeMaxConnectionPerServer
         }
-        let downloadLimitValue = maxOverallDownloadLimit > 0 ? "\(maxOverallDownloadLimit)K" : "0"
-        let uploadLimitValue = maxOverallUploadLimit > 0 ? "\(maxOverallUploadLimit)K" : "0"
+        let downloadLimitValue: String
+        let uploadLimitValue: String
+        if speedLimitEnabled {
+            downloadLimitValue = maxOverallDownloadLimit > 0 ? "\(maxOverallDownloadLimit)K" : "0"
+            uploadLimitValue = maxOverallUploadLimit > 0 ? "\(maxOverallUploadLimit)K" : "0"
+        } else {
+            downloadLimitValue = "0"
+            uploadLimitValue = "0"
+        }
         var config: [String: String] = [
             "max-concurrent-downloads": "\(maxConcurrentDownloads)",
             "max-connection-per-server": "\(safeMaxConnectionPerServer)",

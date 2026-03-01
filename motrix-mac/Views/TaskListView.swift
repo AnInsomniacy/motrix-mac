@@ -183,10 +183,18 @@ struct TaskListView: View {
     private func batchResume() {
         let gids = selectedGIDs
         Task {
+            var failures = 0
             for gid in gids {
                 do {
                     try await downloadService.resumeTask(gid: gid)
-                } catch {}
+                } catch {
+                    failures += 1
+                }
+            }
+            if failures > 0 {
+                await MainActor.run {
+                    state.presentError("Failed to resume \(failures) of \(gids.count) tasks")
+                }
             }
         }
         selectedGIDs.removeAll()
@@ -195,10 +203,18 @@ struct TaskListView: View {
     private func batchPause() {
         let gids = selectedGIDs
         Task {
+            var failures = 0
             for gid in gids {
                 do {
                     try await downloadService.pauseTask(gid: gid)
-                } catch {}
+                } catch {
+                    failures += 1
+                }
+            }
+            if failures > 0 {
+                await MainActor.run {
+                    state.presentError("Failed to pause \(failures) of \(gids.count) tasks")
+                }
             }
         }
         selectedGIDs.removeAll()
@@ -209,6 +225,7 @@ struct TaskListView: View {
         guard !tasks.isEmpty else { return }
         guard let deleteFiles = showBatchDeleteConfirmation(count: tasks.count) else { return }
         Task {
+            var failures = 0
             for task in tasks {
                 do {
                     if task.status == .active || task.status == .waiting || task.status == .paused {
@@ -219,7 +236,14 @@ struct TaskListView: View {
                     if deleteFiles {
                         deleteFilesForTask(task)
                     }
-                } catch {}
+                } catch {
+                    failures += 1
+                }
+            }
+            if failures > 0 {
+                await MainActor.run {
+                    state.presentError("Failed to remove \(failures) of \(tasks.count) tasks")
+                }
             }
         }
         selectedGIDs.removeAll()
@@ -339,11 +363,11 @@ struct TaskListView: View {
         let taskDir = task.dir
         let filePaths = task.files.map(\.path).filter { !$0.isEmpty }
 
-        // 1. Find content subdirectories inside task.dir and trash them entirely
+
         var contentRoots = Set<String>()
         for path in filePaths {
             var parent = (path as NSString).deletingLastPathComponent
-            // Walk up to find the immediate child of taskDir
+
             while !parent.isEmpty && parent != taskDir {
                 let grandParent = (parent as NSString).deletingLastPathComponent
                 if grandParent == taskDir {
@@ -352,18 +376,18 @@ struct TaskListView: View {
                 }
                 parent = grandParent
             }
-            // If file is directly in taskDir, trash the file itself
+
             if (path as NSString).deletingLastPathComponent == taskDir {
                 trashItem(at: path)
             }
         }
 
-        // Trash entire content subdirectories
+
         for dir in contentRoots {
             trashItem(at: dir)
         }
 
-        // 2. Fallback: try dir/taskName
+
         if filePaths.isEmpty && !task.name.isEmpty {
             let fallback = (taskDir as NSString).appendingPathComponent(task.name)
             if fm.fileExists(atPath: fallback) {
@@ -371,19 +395,18 @@ struct TaskListView: View {
             }
         }
 
-        // 3. Clean up .aria2 control files and aria2's hash-named .torrent copies
+
         if !taskDir.isEmpty, let items = try? fm.contentsOfDirectory(atPath: taskDir) {
             for item in items {
                 let lower = item.lowercased()
                 let fullPath = (taskDir as NSString).appendingPathComponent(item)
 
-                // Delete .aria2 control files
+
                 if lower.hasSuffix(".aria2") {
                     trashItem(at: fullPath)
                 }
 
-                // Only delete aria2's auto-generated .torrent copies
-                // These are named by info hash (40 hex chars) like "15b19b67cee7f14f2e...torrent"
+
                 if lower.hasSuffix(".torrent") && task.isBT {
                     let baseName = (item as NSString).deletingPathExtension
                     if isHexHash(baseName) {
@@ -399,7 +422,7 @@ struct TaskListView: View {
         try? FileManager.default.trashItem(at: url, resultingItemURL: nil)
     }
 
-    /// Check if a string looks like a hex hash (only hex chars, 32-64 chars long)
+
     private func isHexHash(_ str: String) -> Bool {
         let len = str.count
         guard len >= 32 && len <= 64 else { return false }

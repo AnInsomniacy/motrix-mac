@@ -25,13 +25,23 @@ actor UPnPService {
             logger.warning("UPnP map failed: no IGD gateway discovered")
             return
         }
-        let success = await addPortMapping(
+        let tcpOK = await addPortMapping(
             controlURL: gateway.controlURL,
             serviceType: gateway.serviceType,
             externalPort: port,
             internalPort: port,
-            internalClient: internalClient
+            internalClient: internalClient,
+            proto: "TCP"
         )
+        let udpOK = await addPortMapping(
+            controlURL: gateway.controlURL,
+            serviceType: gateway.serviceType,
+            externalPort: port,
+            internalPort: port,
+            internalClient: internalClient,
+            proto: "UDP"
+        )
+        let success = tcpOK || udpOK
         mapped = success
         if success {
             mappedPort = port
@@ -44,7 +54,7 @@ actor UPnPService {
             mappedServiceType = nil
             mappedInternalClient = nil
         }
-        logger.info("UPnP map attempt for port \(port): \(self.mapped ? "success" : "failed")")
+        logger.info("UPnP map port \(port) TCP=\(tcpOK) UDP=\(udpOK)")
     }
 
     func unmapPort() async {
@@ -52,11 +62,8 @@ actor UPnPService {
            let controlURL = mappedControlURL,
            let serviceType = mappedServiceType,
            let port = mappedPort {
-            _ = await deletePortMapping(
-                controlURL: controlURL,
-                serviceType: serviceType,
-                externalPort: port
-            )
+            _ = await deletePortMapping(controlURL: controlURL, serviceType: serviceType, externalPort: port, proto: "TCP")
+            _ = await deletePortMapping(controlURL: controlURL, serviceType: serviceType, externalPort: port, proto: "UDP")
         }
         mapped = false
         mappedPort = nil
@@ -190,7 +197,7 @@ ST:\(st)\r
         return URL(string: controlURL, relativeTo: base)?.absoluteURL
     }
 
-    private func addPortMapping(controlURL: URL, serviceType: String, externalPort: UInt16, internalPort: UInt16, internalClient: String) async -> Bool {
+    private func addPortMapping(controlURL: URL, serviceType: String, externalPort: UInt16, internalPort: UInt16, internalClient: String, proto: String) async -> Bool {
         let body = """
 <?xml version="1.0"?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
@@ -198,7 +205,7 @@ ST:\(st)\r
 <u:AddPortMapping xmlns:u="\(serviceType)">
 <NewRemoteHost></NewRemoteHost>
 <NewExternalPort>\(externalPort)</NewExternalPort>
-<NewProtocol>TCP</NewProtocol>
+<NewProtocol>\(proto)</NewProtocol>
 <NewInternalPort>\(internalPort)</NewInternalPort>
 <NewInternalClient>\(internalClient)</NewInternalClient>
 <NewEnabled>1</NewEnabled>
@@ -211,7 +218,7 @@ ST:\(st)\r
         return await performSOAP(controlURL: controlURL, serviceType: serviceType, action: "AddPortMapping", body: body)
     }
 
-    private func deletePortMapping(controlURL: URL, serviceType: String, externalPort: UInt16) async -> Bool {
+    private func deletePortMapping(controlURL: URL, serviceType: String, externalPort: UInt16, proto: String) async -> Bool {
         let body = """
 <?xml version="1.0"?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
@@ -219,7 +226,7 @@ ST:\(st)\r
 <u:DeletePortMapping xmlns:u="\(serviceType)">
 <NewRemoteHost></NewRemoteHost>
 <NewExternalPort>\(externalPort)</NewExternalPort>
-<NewProtocol>TCP</NewProtocol>
+<NewProtocol>\(proto)</NewProtocol>
 </u:DeletePortMapping>
 </s:Body>
 </s:Envelope>
