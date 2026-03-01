@@ -209,11 +209,13 @@ final class DownloadService {
         try await callWithParams(client: client, method: method, params: [])
     }
 
+    nonisolated private static let rpcResponseQueue = DispatchQueue(label: "app.motrix.rpc.response", qos: .userInitiated)
+
     nonisolated private func callWithParams<T>(client: Aria2, method: Aria2Method, params: [AnyEncodable] = []) async throws -> T {
         try await withCheckedThrowingContinuation { continuation in
             client.call(method: method, params: params)
                 .validate()
-                .responseData { response in
+                .responseData(queue: Self.rpcResponseQueue) { response in
                     switch response.result {
                     case .success(let data):
                         do {

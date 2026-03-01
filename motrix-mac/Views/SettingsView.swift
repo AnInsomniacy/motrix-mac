@@ -162,6 +162,7 @@ struct SettingsView: View {
             .foregroundStyle(selectedTab == tab ? .white : .white.opacity(0.72))
             .frame(maxWidth: .infinity)
             .frame(height: 30)
+            .contentShape(Rectangle())
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(selectedTab == tab ? Color.white.opacity(0.11) : Color.clear)

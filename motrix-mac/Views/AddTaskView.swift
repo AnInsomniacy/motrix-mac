@@ -226,6 +226,7 @@ struct AddTaskView: View {
             .foregroundStyle(mode == target ? .white : .white.opacity(0.72))
             .frame(maxWidth: .infinity)
             .frame(height: 30)
+            .contentShape(Rectangle())
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(mode == target ? Color.white.opacity(0.11) : Color.clear)
