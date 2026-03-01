@@ -100,11 +100,29 @@ struct SettingsView: View {
                         }
                         .labelsHidden()
                         .frame(width: 100)
-                        .onChange(of: config.appLanguage) { _, newValue in
-                            if newValue == "system" {
-                                UserDefaults.standard.removeObject(forKey: "AppleLanguages")
+                        .onChange(of: config.appLanguage) { oldValue, newValue in
+                            let alert = NSAlert()
+                            alert.messageText = String(localized: "Restart Required")
+                            alert.informativeText = String(localized: "The app must restart to apply the new language. Cancel to keep the current language.")
+                            alert.alertStyle = .informational
+                            alert.addButton(withTitle: String(localized: "Restart"))
+                            alert.addButton(withTitle: String(localized: "Cancel"))
+                            if alert.runModal() == .alertFirstButtonReturn {
+                                if newValue == "system" {
+                                    UserDefaults.standard.removeObject(forKey: "AppleLanguages")
+                                } else {
+                                    UserDefaults.standard.set([newValue], forKey: "AppleLanguages")
+                                }
+                                UserDefaults.standard.synchronize()
+                                let task = Process()
+                                task.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+                                task.arguments = ["-n", Bundle.main.bundlePath]
+                                try? task.run()
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    NSApplication.shared.terminate(nil)
+                                }
                             } else {
-                                UserDefaults.standard.set([newValue], forKey: "AppleLanguages")
+                                config.appLanguage = oldValue
                             }
                         }
                     }
