@@ -148,7 +148,7 @@ final class DownloadService {
 
     func pauseTask(gid: String) async throws {
         let client = try requireClient()
-        let _: String = try await callWithParams(client: client, method: .pause, params: [AnyEncodable(gid)])
+        let _: String = try await callWithParams(client: client, method: .forcePause, params: [AnyEncodable(gid)])
         await refresh()
     }
 

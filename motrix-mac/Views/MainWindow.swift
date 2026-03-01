@@ -44,8 +44,9 @@ struct MainWindow: View {
         )
         .preferredColorScheme(.dark)
         .sheet(isPresented: Bindable(state).showTaskDetail) {
-            if let gid = state.detailTaskGid {
-                TaskDetailView(taskGid: gid)
+            if let gid = state.detailTaskGid,
+               let task = (state.allActive + state.allCompleted + state.allStopped).first(where: { $0.gid == gid }) {
+                TaskDetailView(task: task)
                     .preferredColorScheme(.dark)
             }
         }

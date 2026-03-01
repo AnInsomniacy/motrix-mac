@@ -5,16 +5,21 @@ struct TaskListView: View {
     @Environment(AppState.self) private var state
     let downloadService: DownloadService
     @State private var selectedGIDs: Set<String> = []
+    @State private var detailTask: DownloadTask?
 
     var body: some View {
         VStack(spacing: 0) {
             toolbar
             Divider().opacity(0.2)
             content
-            if !selectedGIDs.isEmpty {
-                Divider().opacity(0.2)
-                batchBar
+            VStack(spacing: 0) {
+                if !selectedGIDs.isEmpty {
+                    Divider().opacity(0.2)
+                    batchBar
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
+            .animation(.easeInOut(duration: 0.2), value: selectedGIDs.isEmpty)
         }
         .background(
             LinearGradient(
@@ -27,6 +32,9 @@ struct TaskListView: View {
             )
         )
         .onChange(of: state.currentList) { _, _ in selectedGIDs.removeAll() }
+        .sheet(item: $detailTask) { task in
+            TaskDetailView(task: task)
+        }
     }
 
     private var toolbar: some View {
@@ -101,9 +109,9 @@ struct TaskListView: View {
                                 isSelected: selectedGIDs.contains(task.gid),
                                 onToggle: { toggleTask(task) },
                                 onRemove: { confirmRemoveTask(task) },
-                                onSelect: { toggleSelection(task.gid) }
+                                onSelect: { toggleSelection(task.gid) },
+                                onDetail: { showDetail(task) }
                             )
-                            .onTapGesture(count: 2) { showDetail(task) }
                         }
                     }
                     .padding(.horizontal, 20)
@@ -284,7 +292,7 @@ struct TaskListView: View {
     }
 
     private func showDetail(_ task: DownloadTask) {
-        // reserved for future detail view
+        detailTask = task
     }
 
     private func showDeleteConfirmation() -> Bool? {
@@ -318,21 +326,59 @@ struct TaskListView: View {
     }
 
     private func deleteFilesForTask(_ task: DownloadTask) {
-        var candidates = Set(task.files.map(\.path).filter { !$0.isEmpty })
-        if candidates.isEmpty {
-            let fallback = (task.dir as NSString).appendingPathComponent(task.name)
-            if FileManager.default.fileExists(atPath: fallback) {
-                candidates.insert(fallback)
+        let fm = FileManager.default
+        let taskDir = task.dir
+        let filePaths = task.files.map(\.path).filter { !$0.isEmpty }
+
+        // 1. Find content subdirectories inside task.dir and delete them entirely
+        var contentRoots = Set<String>()
+        for path in filePaths {
+            var parent = (path as NSString).deletingLastPathComponent
+            // Walk up to find the immediate child of taskDir
+            while !parent.isEmpty && parent != taskDir {
+                let grandParent = (parent as NSString).deletingLastPathComponent
+                if grandParent == taskDir {
+                    contentRoots.insert(parent)
+                    break
+                }
+                parent = grandParent
+            }
+            // If file is directly in taskDir, delete the file itself
+            if (path as NSString).deletingLastPathComponent == taskDir {
+                try? fm.removeItem(atPath: path)
             }
         }
-        for path in candidates {
-            try? FileManager.default.removeItem(atPath: path)
+
+        // Delete entire content subdirectories
+        for dir in contentRoots {
+            try? fm.removeItem(atPath: dir)
         }
-        // Also try to remove the containing directory if it's now empty
-        if !task.dir.isEmpty {
-            let contents = (try? FileManager.default.contentsOfDirectory(atPath: task.dir)) ?? []
-            if contents.isEmpty {
-                try? FileManager.default.removeItem(atPath: task.dir)
+
+        // 2. Fallback: try dir/taskName
+        if filePaths.isEmpty && !task.name.isEmpty {
+            let fallback = (taskDir as NSString).appendingPathComponent(task.name)
+            if fm.fileExists(atPath: fallback) {
+                try? fm.removeItem(atPath: fallback)
+            }
+        }
+
+        // 3. Clean up .aria2 control files and .torrent copies in task.dir
+        if !taskDir.isEmpty, let items = try? fm.contentsOfDirectory(atPath: taskDir) {
+            let taskName = task.name
+            for item in items {
+                let lower = item.lowercased()
+                if lower.hasSuffix(".aria2") {
+                    // .aria2 files matching task content
+                    let fullPath = (taskDir as NSString).appendingPathComponent(item)
+                    try? fm.removeItem(atPath: fullPath)
+                }
+                if lower.hasSuffix(".torrent") && task.isBT {
+                    // Torrent file copies that match this task's infoHash or name
+                    let fullPath = (taskDir as NSString).appendingPathComponent(item)
+                    if item.contains(task.infoHash ?? "__no_match__") || item.localizedCaseInsensitiveContains(taskName) {
+                        try? fm.removeItem(atPath: fullPath)
+                    }
+                }
             }
         }
     }

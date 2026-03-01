@@ -6,6 +6,7 @@ struct TaskRowView: View {
     let onToggle: () -> Void
     let onRemove: () -> Void
     let onSelect: () -> Void
+    let onDetail: () -> Void
     @State private var isHovered = false
 
     var body: some View {
@@ -27,17 +28,15 @@ struct TaskRowView: View {
 
                     Spacer()
 
-                    if isHovered {
-                        HStack(spacing: 4) {
-                            if task.status == .active || task.status == .waiting || task.status == .paused {
-                                actionBtn(task.status == .active ? "pause.fill" : "play.fill", onToggle)
-                            }
-                            if task.status == .complete {
-                                actionBtn("folder", { openInFinder() })
-                            }
-                            actionBtn("trash", onRemove)
+                    HStack(spacing: 4) {
+                        if task.status == .active || task.status == .waiting || task.status == .paused {
+                            actionBtn(task.status == .active ? "pause.fill" : "play.fill", onToggle)
                         }
-                        .transition(.opacity.combined(with: .scale(scale: 0.8)))
+                        if task.status == .complete {
+                            actionBtn("folder", { openInFinder() })
+                        }
+                        actionBtn("trash", onRemove)
+                        actionBtn("info.circle", onDetail)
                     }
                 }
 
