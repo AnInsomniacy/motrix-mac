@@ -8,6 +8,7 @@ struct TaskRowView: View {
     let onRemove: () -> Void
     let onSelect: () -> Void
     let onDetail: () -> Void
+    let onStopSeeding: () -> Void
     @State private var isHovered = false
 
     var body: some View {
@@ -30,6 +31,22 @@ struct TaskRowView: View {
                     Spacer()
 
                     HStack(spacing: 4) {
+                        if task.isSeeding {
+                            Button(action: onStopSeeding) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "stop.fill")
+                                        .font(.system(size: 9))
+                                    Text("Stop Seeding")
+                                        .font(.system(size: 11, weight: .medium))
+                                }
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 10)
+                                .frame(height: 24)
+                                .background(Color.orange.opacity(0.85))
+                                .clipShape(Capsule())
+                            }
+                            .buttonStyle(.plain)
+                        }
                         if isOperating {
                             ProgressView()
                                 .controlSize(.small)
@@ -113,9 +130,19 @@ struct TaskRowView: View {
                     .foregroundStyle(.red)
             }
             if task.isSeeding {
-                Text("Seeding")
+                Button(action: onToggle) {
+                    HStack(spacing: 3) {
+                        Image(systemName: "stop.fill")
+                            .font(.system(size: 8))
+                        Text("Seeding")
+                    }
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(.mint)
+                }
+                .buttonStyle(.plain)
+                .onHover { h in
+                    if h { NSCursor.pointingHand.push() } else { NSCursor.pop() }
+                }
             }
         }
     }

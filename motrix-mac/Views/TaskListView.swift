@@ -116,7 +116,8 @@ struct TaskListView: View {
                                 onToggle: { toggleTask(task) },
                                 onRemove: { confirmRemoveTask(task) },
                                 onSelect: { toggleSelection(task.gid) },
-                                onDetail: { showDetail(task) }
+                                onDetail: { showDetail(task) },
+                                onStopSeeding: { stopSeeding(task) }
                             )
                         }
                     }
@@ -330,6 +331,18 @@ struct TaskListView: View {
 
     private func showDetail(_ task: DownloadTask) {
         detailTask = task
+    }
+
+    private func stopSeeding(_ task: DownloadTask) {
+        operatingGIDs.insert(task.gid)
+        Task {
+            defer { operatingGIDs.remove(task.gid) }
+            do {
+                try await downloadService.removeTask(gid: task.gid)
+            } catch {
+                state.presentError("Stop seeding failed: \(error.localizedDescription)")
+            }
+        }
     }
 
     private func showDeleteConfirmation() -> Bool? {

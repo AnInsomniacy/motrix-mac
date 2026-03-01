@@ -57,9 +57,10 @@ final class ConfigService {
             "seed-ratio": "\(seedRatio)",
             "rpc-secret": effectiveRPCSecret,
         ]
-        if keepSeeding || seedRatio == 0 {
+        if keepSeeding {
             config["seed-ratio"] = "0"
         } else {
+            config["seed-ratio"] = "\(seedRatio)"
             config["seed-time"] = "\(seedTime)"
         }
         return config
