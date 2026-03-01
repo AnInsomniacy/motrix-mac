@@ -70,7 +70,3 @@ Build and run from Xcode. The bundled `aria2c` binary is included in `Engine/Res
 - [Motrix](https://github.com/agalwood/Motrix) by Dr_rOot — the original cross-platform download manager
 - [aria2](https://aria2.github.io/) — the high-performance download engine
 - [ngosang/trackerslist](https://github.com/ngosang/trackerslist) — public BitTorrent tracker lists
-
-## License
-
-[MIT](LICENSE)

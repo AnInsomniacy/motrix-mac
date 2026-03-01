@@ -5,6 +5,7 @@ import UserNotifications
 
 @main
 struct MotrixApp: App {
+    @NSApplicationDelegateAdaptor(MotrixAppDelegate.self) private var appDelegate
     @State private var appState = AppState()
     @State private var engine = Aria2Process()
     @State private var downloadService: DownloadService
@@ -30,9 +31,9 @@ struct MotrixApp: App {
         WindowGroup {
             MainWindow(downloadService: downloadService)
                 .environment(appState)
-                .onAppear { startup() }
-                .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
-                    shutdown()
+                .onAppear {
+                    appDelegate.shutdownHandler = { [self] in await self.shutdown() }
+                    startup()
                 }
                 .handlesExternalEvents(preferring: ["motrix"], allowing: ["*"])
                 .onOpenURL { url in handleURL(url) }
@@ -116,7 +117,7 @@ struct MotrixApp: App {
         startDockBadgeUpdater()
     }
 
-    private func shutdown() {
+    func shutdown() async {
         guard hasStarted else { return }
         hasStarted = false
         engineWatchdogTask?.cancel()
@@ -125,22 +126,9 @@ struct MotrixApp: App {
         dockBadgeTask = nil
         settingsSyncTask?.cancel()
         settingsSyncTask = nil
-        let semaphore = DispatchSemaphore(value: 0)
-        let svc = downloadService
-        let upnp = upnpService
-        DispatchQueue.global(qos: .userInitiated).async {
-            let group = DispatchGroup()
-            group.enter()
-            Task {
-                await svc.saveSession()
-                await svc.shutdown()
-                await upnp.unmapPort()
-                group.leave()
-            }
-            group.wait()
-            semaphore.signal()
-        }
-        semaphore.wait()
+        await downloadService.saveSession()
+        await downloadService.shutdown()
+        await upnpService.unmapPort()
         downloadService.stopPolling()
         downloadService.disconnect()
         engine.stop()
@@ -453,4 +441,24 @@ private struct AppliedSettingsSnapshot: Equatable {
         .environment(state)
         .frame(width: 900, height: 600)
         .preferredColorScheme(.dark)
+}
+
+class MotrixAppDelegate: NSObject, NSApplicationDelegate {
+    var shutdownHandler: (() async -> Void)?
+
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard let handler = shutdownHandler else { return .terminateNow }
+        shutdownHandler = nil
+
+        Task { @MainActor in
+            await handler()
+            NSApp.reply(toApplicationShouldTerminate: true)
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            NSApp.reply(toApplicationShouldTerminate: true)
+        }
+
+        return .terminateLater
+    }
 }

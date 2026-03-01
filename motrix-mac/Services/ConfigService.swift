@@ -22,6 +22,7 @@ final class ConfigService {
     @AppStorage("keepSeeding") var keepSeeding: Bool = false
     @AppStorage("maxOverallDownloadLimit") var maxOverallDownloadLimit: Int = 0
     @AppStorage("maxOverallUploadLimit") var maxOverallUploadLimit: Int = 0
+    @AppStorage("speedLimitEnabled") var speedLimitEnabled: Bool = false
     @AppStorage("rpcSecret") var rpcSecret: String = ""
 
     var effectiveRPCSecret: String {

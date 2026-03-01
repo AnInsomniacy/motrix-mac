@@ -23,23 +23,7 @@ struct AboutView: View {
                     infoCard(title: "Engine", value: "aria2")
                 }
 
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Highlights")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.75))
 
-                    featureRow(icon: "bolt.fill", text: "Multi-protocol downloads with parallel connections")
-                    featureRow(icon: "link", text: "Magnet, Thunder, HTTP, HTTPS, FTP, and BitTorrent support")
-                    featureRow(icon: "speedometer", text: "Live transfer speed, queue controls, and quick actions")
-                    featureRow(icon: "slider.horizontal.3", text: "Flexible settings for speed limits and seeding")
-                }
-                .padding(18)
-                .background(Color.white.opacity(0.04))
-                .clipShape(RoundedRectangle(cornerRadius: 14))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
-                )
 
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Author")
@@ -124,17 +108,5 @@ struct AboutView: View {
             RoundedRectangle(cornerRadius: 12)
                 .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
         )
-    }
-
-    private func featureRow(icon: String, text: String) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.7))
-                .frame(width: 16)
-            Text(text)
-                .font(.system(size: 12))
-                .foregroundStyle(.white.opacity(0.8))
-        }
     }
 }

@@ -4,12 +4,17 @@ import AppKit
 struct TaskListView: View {
     @Environment(AppState.self) private var state
     let downloadService: DownloadService
+    @State private var selectedGIDs: Set<String> = []
 
     var body: some View {
         VStack(spacing: 0) {
             toolbar
             Divider().opacity(0.2)
             content
+            if !selectedGIDs.isEmpty {
+                Divider().opacity(0.2)
+                batchBar
+            }
         }
         .background(
             LinearGradient(
@@ -21,6 +26,7 @@ struct TaskListView: View {
                 endPoint: .bottom
             )
         )
+        .onChange(of: state.currentList) { _, _ in selectedGIDs.removeAll() }
     }
 
     private var toolbar: some View {
@@ -37,20 +43,6 @@ struct TaskListView: View {
             }
             .padding(.trailing, 8)
 
-            toolbarBtn("xmark", "Clear") {
-                for task in state.completedTasks {
-                    Task {
-                        do {
-                            try await downloadService.removeTaskRecord(gid: task.gid)
-                        } catch {
-                            state.presentError("Clear failed: \(error.localizedDescription)")
-                        }
-                    }
-                }
-            }
-            toolbarBtn("arrow.clockwise", "Refresh") {
-                Task { await downloadService.refresh() }
-            }
             toolbarBtn("play.fill", "Resume All") {
                 Task {
                     do {
@@ -106,8 +98,10 @@ struct TaskListView: View {
                         ForEach(state.filteredTasks) { task in
                             TaskRowView(
                                 task: task,
+                                isSelected: selectedGIDs.contains(task.gid),
                                 onToggle: { toggleTask(task) },
-                                onRemove: { confirmRemoveTask(task) }
+                                onRemove: { confirmRemoveTask(task) },
+                                onSelect: { toggleSelection(task.gid) }
                             )
                             .onTapGesture(count: 2) { showDetail(task) }
                         }
@@ -122,6 +116,105 @@ struct TaskListView: View {
         .animation(.easeInOut(duration: 0.2), value: state.currentList)
     }
 
+    private var batchBar: some View {
+        HStack(spacing: 12) {
+            Text("\(selectedGIDs.count) selected")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.white.opacity(0.7))
+
+            Spacer()
+
+            Button {
+                batchResume()
+            } label: {
+                Label("Resume", systemImage: "play.fill")
+                    .font(.system(size: 12, weight: .medium))
+            }
+            .buttonStyle(MotrixButtonStyle(prominent: false))
+
+            Button {
+                batchPause()
+            } label: {
+                Label("Pause", systemImage: "pause.fill")
+                    .font(.system(size: 12, weight: .medium))
+            }
+            .buttonStyle(MotrixButtonStyle(prominent: false))
+
+            Button {
+                batchRemove()
+            } label: {
+                Label("Delete", systemImage: "trash")
+                    .font(.system(size: 12, weight: .medium))
+            }
+            .buttonStyle(MotrixButtonStyle(prominent: false))
+
+            Button {
+                selectedGIDs.removeAll()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 11, weight: .medium))
+            }
+            .buttonStyle(MotrixIconButtonStyle())
+            .help("Deselect all")
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 10)
+        .background(Color.blue.opacity(0.08))
+    }
+
+    private func toggleSelection(_ gid: String) {
+        if selectedGIDs.contains(gid) {
+            selectedGIDs.remove(gid)
+        } else {
+            selectedGIDs.insert(gid)
+        }
+    }
+
+    private func batchResume() {
+        let gids = selectedGIDs
+        Task {
+            for gid in gids {
+                do {
+                    try await downloadService.resumeTask(gid: gid)
+                } catch {}
+            }
+        }
+        selectedGIDs.removeAll()
+    }
+
+    private func batchPause() {
+        let gids = selectedGIDs
+        Task {
+            for gid in gids {
+                do {
+                    try await downloadService.pauseTask(gid: gid)
+                } catch {}
+            }
+        }
+        selectedGIDs.removeAll()
+    }
+
+    private func batchRemove() {
+        let tasks = state.filteredTasks.filter { selectedGIDs.contains($0.gid) }
+        guard !tasks.isEmpty else { return }
+        guard let deleteFiles = showBatchDeleteConfirmation(count: tasks.count) else { return }
+        Task {
+            for task in tasks {
+                do {
+                    if task.status == .active || task.status == .waiting || task.status == .paused {
+                        try await downloadService.removeTask(gid: task.gid)
+                    } else {
+                        try await downloadService.removeTaskRecord(gid: task.gid)
+                    }
+                    if deleteFiles {
+                        deleteFilesForTask(task)
+                    }
+                } catch {}
+            }
+        }
+        selectedGIDs.removeAll()
+    }
+
     private var emptyState: some View {
         VStack(spacing: 16) {
             Spacer()
@@ -130,31 +223,24 @@ struct TaskListView: View {
                 Circle()
                     .fill(
                         RadialGradient(
-                            colors: [Color.blue.opacity(0.08), .clear],
+                            colors: [Color.blue.opacity(0.08), Color.clear],
                             center: .center,
-                            startRadius: 0,
-                            endRadius: 80
+                            startRadius: 10,
+                            endRadius: 60
                         )
                     )
-                    .frame(width: 160, height: 160)
+                    .frame(width: 120, height: 120)
 
-                Image(systemName: "arrow.down.to.line.circle")
-                    .font(.system(size: 64, weight: .ultraLight))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.white.opacity(0.3), .white.opacity(0.1)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
+                Image(systemName: "tray")
+                    .font(.system(size: 36, weight: .light))
+                    .foregroundColor(.secondary.opacity(0.5))
             }
 
             Text(emptyTitle)
-                .font(.system(size: 14))
-                .foregroundStyle(.white.opacity(0.4))
+                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .foregroundStyle(.secondary)
 
             Spacer()
-
             HStack {
                 Spacer()
                 Image(systemName: "wand.and.rays")
@@ -174,25 +260,19 @@ struct TaskListView: View {
                     try await downloadService.resumeTask(gid: task.gid)
                 }
             } catch {
-                state.presentError("Task action failed: \(error.localizedDescription)")
+                state.presentError("Toggle failed: \(error.localizedDescription)")
             }
         }
     }
 
     private func confirmRemoveTask(_ task: DownloadTask) {
-        let alsoDeleteFiles = showDeleteConfirmation()
-        guard let alsoDeleteFiles else { return }
-        removeTask(task, deleteFiles: alsoDeleteFiles)
-    }
-
-    private func removeTask(_ task: DownloadTask, deleteFiles: Bool) {
+        guard let deleteFiles = showDeleteConfirmation() else { return }
         Task {
             do {
-                switch task.status {
-                case .complete, .error, .removed:
-                    try await downloadService.removeTaskRecord(gid: task.gid)
-                default:
+                if task.status == .active || task.status == .waiting || task.status == .paused {
                     try await downloadService.removeTask(gid: task.gid)
+                } else {
+                    try await downloadService.removeTaskRecord(gid: task.gid)
                 }
                 if deleteFiles {
                     deleteFilesForTask(task)
@@ -201,6 +281,10 @@ struct TaskListView: View {
                 state.presentError("Remove failed: \(error.localizedDescription)")
             }
         }
+    }
+
+    private func showDetail(_ task: DownloadTask) {
+        // reserved for future detail view
     }
 
     private func showDeleteConfirmation() -> Bool? {
@@ -218,31 +302,39 @@ struct TaskListView: View {
         return checkbox.state == .on
     }
 
+    private func showBatchDeleteConfirmation(count: Int) -> Bool? {
+        let alert = NSAlert()
+        alert.messageText = "Remove \(count) tasks?"
+        alert.informativeText = "This will remove all selected tasks. You can also delete their files."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Remove All")
+        alert.addButton(withTitle: "Cancel")
+        let checkbox = NSButton(checkboxWithTitle: "Also delete files", target: nil, action: nil)
+        checkbox.state = .off
+        alert.accessoryView = checkbox
+        let response = alert.runModal()
+        if response != .alertFirstButtonReturn { return nil }
+        return checkbox.state == .on
+    }
+
     private func deleteFilesForTask(_ task: DownloadTask) {
         var candidates = Set(task.files.map(\.path).filter { !$0.isEmpty })
         if candidates.isEmpty {
             let fallback = (task.dir as NSString).appendingPathComponent(task.name)
-            candidates.insert(fallback)
-        }
-        var failures: [String] = []
-        for path in candidates {
-            let url = URL(fileURLWithPath: path)
-            do {
-                if FileManager.default.fileExists(atPath: url.path) {
-                    try FileManager.default.removeItem(at: url)
-                }
-            } catch {
-                failures.append(url.lastPathComponent)
+            if FileManager.default.fileExists(atPath: fallback) {
+                candidates.insert(fallback)
             }
         }
-        if !failures.isEmpty {
-            state.presentError("Task removed, but failed to delete: \(failures.joined(separator: ", "))")
+        for path in candidates {
+            try? FileManager.default.removeItem(atPath: path)
         }
-    }
-
-    private func showDetail(_ task: DownloadTask) {
-        state.detailTaskGid = task.gid
-        state.showTaskDetail = true
+        // Also try to remove the containing directory if it's now empty
+        if !task.dir.isEmpty {
+            let contents = (try? FileManager.default.contentsOfDirectory(atPath: task.dir)) ?? []
+            if contents.isEmpty {
+                try? FileManager.default.removeItem(atPath: task.dir)
+            }
+        }
     }
 
     private var emptyTitle: String {

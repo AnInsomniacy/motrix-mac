@@ -2,63 +2,81 @@ import SwiftUI
 
 struct TaskRowView: View {
     let task: DownloadTask
+    let isSelected: Bool
     let onToggle: () -> Void
     let onRemove: () -> Void
+    let onSelect: () -> Void
     @State private var isHovered = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .top) {
-                Text(task.name)
-                    .font(.system(size: 14))
-                    .foregroundStyle(.primary)
-                    .lineLimit(2)
-                    .truncationMode(.middle)
-
-                Spacer()
-
-                if isHovered {
-                    HStack(spacing: 4) {
-                        if task.status == .active || task.status == .waiting || task.status == .paused {
-                            actionBtn(task.status == .active ? "pause.fill" : "play.fill", onToggle)
-                        }
-                        if task.status == .complete {
-                            actionBtn("folder", { openInFinder() })
-                        }
-                        actionBtn("trash", onRemove)
-                    }
-                    .transition(.opacity.combined(with: .scale(scale: 0.8)))
-                }
+        HStack(spacing: 10) {
+            Button(action: onSelect) {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 16))
+                    .foregroundStyle(isSelected ? .blue : .white.opacity(0.25))
             }
+            .buttonStyle(.plain)
 
-            VStack(spacing: 6) {
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(progressTrackColor)
-                            .frame(height: 4)
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(progressColor)
-                            .frame(width: max(0, geo.size.width * task.progress), height: 4)
-                            .animation(.easeInOut(duration: 0.3), value: task.progress)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .top) {
+                    Text(task.name)
+                        .font(.system(size: 14))
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+                        .truncationMode(.middle)
+
+                    Spacer()
+
+                    if isHovered {
+                        HStack(spacing: 4) {
+                            if task.status == .active || task.status == .waiting || task.status == .paused {
+                                actionBtn(task.status == .active ? "pause.fill" : "play.fill", onToggle)
+                            }
+                            if task.status == .complete {
+                                actionBtn("folder", { openInFinder() })
+                            }
+                            actionBtn("trash", onRemove)
+                        }
+                        .transition(.opacity.combined(with: .scale(scale: 0.8)))
                     }
                 }
-                .frame(height: 4)
 
-                HStack(spacing: 0) {
-                    progressInfo
-                    Spacer()
-                    speedInfo
+                VStack(spacing: 6) {
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(progressTrackColor)
+                                .frame(height: 4)
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(progressColor)
+                                .frame(width: max(0, geo.size.width * task.progress), height: 4)
+                                .animation(.easeInOut(duration: 0.3), value: task.progress)
+                        }
+                    }
+                    .frame(height: 4)
+
+                    HStack(spacing: 0) {
+                        progressInfo
+                        Spacer()
+                        speedInfo
+                    }
                 }
             }
         }
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 6)
-                .fill(Color(nsColor: NSColor(white: 0.18, alpha: 1)))
+                .fill(isSelected
+                    ? Color.blue.opacity(0.08)
+                    : Color(nsColor: NSColor(white: 0.18, alpha: 1)))
                 .overlay(
                     RoundedRectangle(cornerRadius: 6)
-                        .strokeBorder(isHovered ? Color.white.opacity(0.15) : Color.white.opacity(0.06), lineWidth: 1)
+                        .strokeBorder(
+                            isSelected ? Color.blue.opacity(0.3)
+                            : isHovered ? Color.white.opacity(0.15)
+                            : Color.white.opacity(0.06),
+                            lineWidth: 1
+                        )
                 )
         )
         .onHover { h in withAnimation(.easeInOut(duration: 0.15)) { isHovered = h } }

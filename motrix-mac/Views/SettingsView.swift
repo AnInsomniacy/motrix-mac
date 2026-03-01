@@ -111,30 +111,43 @@ struct SettingsView: View {
         HStack(alignment: .top, spacing: 12) {
             VStack(spacing: 12) {
                 settingsCard(icon: "speedometer", title: "Speed Limits") {
-                    settingsRow("Download") {
-                        HStack(spacing: 4) {
-                            TextField("0", value: $config.maxOverallDownloadLimit, format: .number)
-                                .textFieldStyle(.plain)
-                                .font(.system(size: 13, weight: .medium, design: .monospaced))
-                                .foregroundStyle(.white)
-                                .frame(width: 60)
-                                .multilineTextAlignment(.trailing)
-                            Text("KB/s")
-                                .font(.system(size: 11))
-                                .foregroundStyle(.white.opacity(0.4))
-                        }
+                    settingsRow("Enable") {
+                        Toggle("", isOn: $config.speedLimitEnabled).toggleStyle(.switch).labelsHidden()
                     }
-                    Divider().opacity(0.3)
-                    settingsRow("Upload") {
-                        HStack(spacing: 4) {
-                            TextField("0", value: $config.maxOverallUploadLimit, format: .number)
-                                .textFieldStyle(.plain)
-                                .font(.system(size: 13, weight: .medium, design: .monospaced))
-                                .foregroundStyle(.white)
-                                .frame(width: 60)
-                                .multilineTextAlignment(.trailing)
-                            Text("KB/s")
-                                .font(.system(size: 11))
+                    if config.speedLimitEnabled {
+                        Divider().opacity(0.3)
+                        settingsRow("Download") {
+                            HStack(spacing: 4) {
+                                TextField("0", value: $config.maxOverallDownloadLimit, format: .number)
+                                    .textFieldStyle(.plain)
+                                    .font(.system(size: 13, weight: .medium, design: .monospaced))
+                                    .foregroundStyle(.white)
+                                    .frame(width: 60)
+                                    .multilineTextAlignment(.trailing)
+                                Text("KB/s")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.white.opacity(0.4))
+                            }
+                        }
+                        Divider().opacity(0.3)
+                        settingsRow("Upload") {
+                            HStack(spacing: 4) {
+                                TextField("0", value: $config.maxOverallUploadLimit, format: .number)
+                                    .textFieldStyle(.plain)
+                                    .font(.system(size: 13, weight: .medium, design: .monospaced))
+                                    .foregroundStyle(.white)
+                                    .frame(width: 60)
+                                    .multilineTextAlignment(.trailing)
+                                Text("KB/s")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.white.opacity(0.4))
+                            }
+                        }
+                    } else {
+                        Divider().opacity(0.3)
+                        settingsRow("Status") {
+                            Text("Unlimited")
+                                .font(.system(size: 12))
                                 .foregroundStyle(.white.opacity(0.4))
                         }
                     }
