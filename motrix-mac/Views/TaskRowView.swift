@@ -3,6 +3,7 @@ import SwiftUI
 struct TaskRowView: View {
     let task: DownloadTask
     let isSelected: Bool
+    let isOperating: Bool
     let onToggle: () -> Void
     let onRemove: () -> Void
     let onSelect: () -> Void
@@ -29,7 +30,12 @@ struct TaskRowView: View {
                     Spacer()
 
                     HStack(spacing: 4) {
-                        if task.status == .active || task.status == .waiting || task.status == .paused {
+                        if isOperating {
+                            ProgressView()
+                                .controlSize(.small)
+                                .scaleEffect(0.7)
+                                .frame(width: 24, height: 24)
+                        } else if task.status == .active || task.status == .waiting || task.status == .paused {
                             actionBtn(task.status == .active ? "pause.fill" : "play.fill", onToggle)
                         }
                         if task.status == .complete {

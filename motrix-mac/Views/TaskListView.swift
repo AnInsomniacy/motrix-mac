@@ -6,6 +6,7 @@ struct TaskListView: View {
     let downloadService: DownloadService
     @State private var selectedGIDs: Set<String> = []
     @State private var detailTask: DownloadTask?
+    @State private var operatingGIDs: Set<String> = []
 
     var body: some View {
         VStack(spacing: 0) {
@@ -107,6 +108,7 @@ struct TaskListView: View {
                             TaskRowView(
                                 task: task,
                                 isSelected: selectedGIDs.contains(task.gid),
+                                isOperating: operatingGIDs.contains(task.gid),
                                 onToggle: { toggleTask(task) },
                                 onRemove: { confirmRemoveTask(task) },
                                 onSelect: { toggleSelection(task.gid) },
@@ -260,15 +262,22 @@ struct TaskListView: View {
     }
 
     private func toggleTask(_ task: DownloadTask) {
+        guard task.status == .active || task.status == .waiting || task.status == .paused else { return }
+        guard !operatingGIDs.contains(task.gid) else { return }
+        operatingGIDs.insert(task.gid)
+        let shouldPause = task.status == .active || task.status == .waiting
         Task {
+            defer { operatingGIDs.remove(task.gid) }
             do {
-                if task.status == .active {
+                if shouldPause {
                     try await downloadService.pauseTask(gid: task.gid)
                 } else {
                     try await downloadService.resumeTask(gid: task.gid)
                 }
             } catch {
-                state.presentError("Toggle failed: \(error.localizedDescription)")
+                let desc = error.localizedDescription
+                if desc.contains("400") { return }
+                state.presentError("Toggle failed: \(desc)")
             }
         }
     }
@@ -330,7 +339,7 @@ struct TaskListView: View {
         let taskDir = task.dir
         let filePaths = task.files.map(\.path).filter { !$0.isEmpty }
 
-        // 1. Find content subdirectories inside task.dir and delete them entirely
+        // 1. Find content subdirectories inside task.dir and trash them entirely
         var contentRoots = Set<String>()
         for path in filePaths {
             var parent = (path as NSString).deletingLastPathComponent
@@ -343,44 +352,58 @@ struct TaskListView: View {
                 }
                 parent = grandParent
             }
-            // If file is directly in taskDir, delete the file itself
+            // If file is directly in taskDir, trash the file itself
             if (path as NSString).deletingLastPathComponent == taskDir {
-                try? fm.removeItem(atPath: path)
+                trashItem(at: path)
             }
         }
 
-        // Delete entire content subdirectories
+        // Trash entire content subdirectories
         for dir in contentRoots {
-            try? fm.removeItem(atPath: dir)
+            trashItem(at: dir)
         }
 
         // 2. Fallback: try dir/taskName
         if filePaths.isEmpty && !task.name.isEmpty {
             let fallback = (taskDir as NSString).appendingPathComponent(task.name)
             if fm.fileExists(atPath: fallback) {
-                try? fm.removeItem(atPath: fallback)
+                trashItem(at: fallback)
             }
         }
 
-        // 3. Clean up .aria2 control files and .torrent copies in task.dir
+        // 3. Clean up .aria2 control files and aria2's hash-named .torrent copies
         if !taskDir.isEmpty, let items = try? fm.contentsOfDirectory(atPath: taskDir) {
-            let taskName = task.name
             for item in items {
                 let lower = item.lowercased()
+                let fullPath = (taskDir as NSString).appendingPathComponent(item)
+
+                // Delete .aria2 control files
                 if lower.hasSuffix(".aria2") {
-                    // .aria2 files matching task content
-                    let fullPath = (taskDir as NSString).appendingPathComponent(item)
-                    try? fm.removeItem(atPath: fullPath)
+                    trashItem(at: fullPath)
                 }
+
+                // Only delete aria2's auto-generated .torrent copies
+                // These are named by info hash (40 hex chars) like "15b19b67cee7f14f2e...torrent"
                 if lower.hasSuffix(".torrent") && task.isBT {
-                    // Torrent file copies that match this task's infoHash or name
-                    let fullPath = (taskDir as NSString).appendingPathComponent(item)
-                    if item.contains(task.infoHash ?? "__no_match__") || item.localizedCaseInsensitiveContains(taskName) {
-                        try? fm.removeItem(atPath: fullPath)
+                    let baseName = (item as NSString).deletingPathExtension
+                    if isHexHash(baseName) {
+                        trashItem(at: fullPath)
                     }
                 }
             }
         }
+    }
+
+    private func trashItem(at path: String) {
+        let url = URL(fileURLWithPath: path)
+        try? FileManager.default.trashItem(at: url, resultingItemURL: nil)
+    }
+
+    /// Check if a string looks like a hex hash (only hex chars, 32-64 chars long)
+    private func isHexHash(_ str: String) -> Bool {
+        let len = str.count
+        guard len >= 32 && len <= 64 else { return false }
+        return str.allSatisfy { $0.isHexDigit }
     }
 
     private var emptyTitle: String {

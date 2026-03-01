@@ -87,7 +87,7 @@ struct Sidebar: View {
 
             Spacer()
         }
-        .frame(width: 160)
+        .frame(width: 190)
         .background(
             LinearGradient(
                 colors: [
