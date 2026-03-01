@@ -4,7 +4,7 @@ A native macOS download manager built with SwiftUI, reimagined from the ground u
 
 <img width="936" height="636" alt="image" src="https://github.com/user-attachments/assets/2a01c1f0-66ea-4cb8-8154-5a44bb97e073" />
 
-While the original Motrix is a cross-platform Electron app, this project is a complete rewrite targeting macOS exclusively — delivering a lighter footprint, tighter system integration, and a truly native experience powered by aria2.
+While the original Motrix is a cross-platform Electron app, this project is a complete rewrite targeting macOS exclusively — delivering a lighter footprint, tighter system integration, and a truly native experience powered by aria2. Supports English, 简体中文, and 日本語.
 
 ## Features
 
@@ -19,6 +19,7 @@ While the original Motrix is a cross-platform Electron app, this project is a co
 - **Drag & drop** — drop `.torrent` files or URLs directly onto the window
 - **Dark mode** — native dark theme throughout
 - **macOS notifications** — alerts on download completion or failure
+- **Multi-language** — English, 简体中文, 日本語 with in-app language switching
 - **Start at login** — managed via `SMAppService`
 - **Auto update check** — queries GitHub Releases for newer versions
 
