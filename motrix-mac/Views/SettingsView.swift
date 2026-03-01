@@ -25,24 +25,16 @@ struct SettingsView: View {
                 Group {
                     switch selectedTab {
                     case .basic:
-                        basicTab
+                        basicCards
                             .transition(.opacity)
                     case .advanced:
-                        advancedTab
+                        advancedCards
                             .transition(.opacity)
                     }
                 }
                 .animation(.easeInOut(duration: 0.2), value: selectedTab)
-                .padding(20)
+                .padding(16)
             }
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(Color.white.opacity(0.04))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
-            )
         }
         .padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -59,79 +51,140 @@ struct SettingsView: View {
         .preferredColorScheme(.dark)
     }
 
-    private var basicTab: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            settingsSection("Download") {
-                HStack {
-                    Text("Save to")
-                    Spacer()
+    private var basicCards: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(spacing: 12) {
+                settingsCard(icon: "folder", title: "Save Location") {
                     Text(config.downloadDir)
-                        .lineLimit(1)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.white.opacity(0.5))
+                        .lineLimit(2)
                         .truncationMode(.middle)
-                        .foregroundStyle(.secondary)
                     Button("Browse") { pickDirectory() }
                         .buttonStyle(MotrixButtonStyle(prominent: false))
                 }
-                Stepper("Max concurrent: \(config.maxConcurrentDownloads)", value: $config.maxConcurrentDownloads, in: 1...20)
-                Stepper("Connections per server: \(config.maxConnectionPerServer)", value: $config.maxConnectionPerServer, in: 1...16)
+
+                settingsCard(icon: "bell", title: "Behavior") {
+                    settingsRow("Resume on launch") {
+                        Toggle("", isOn: $config.resumeAllOnLaunch).toggleStyle(.switch).labelsHidden()
+                    }
+                    Divider().opacity(0.3)
+                    settingsRow("Notifications") {
+                        Toggle("", isOn: $config.taskNotification).toggleStyle(.switch).labelsHidden()
+                    }
+                    Divider().opacity(0.3)
+                    settingsRow("Speed in Dock") {
+                        Toggle("", isOn: $config.showProgressBar).toggleStyle(.switch).labelsHidden()
+                    }
+                }
             }
 
-            settingsSection("Behavior") {
-                Toggle("Resume all on launch", isOn: $config.resumeAllOnLaunch)
-                Toggle("Show notifications", isOn: $config.taskNotification)
-                Toggle("Show speed in Dock", isOn: $config.showProgressBar)
-            }
+            VStack(spacing: 12) {
+                settingsCard(icon: "arrow.down.circle", title: "Connections") {
+                    settingsRow("Max concurrent") {
+                        Stepper("\(config.maxConcurrentDownloads)", value: $config.maxConcurrentDownloads, in: 1...20)
+                    }
+                    Divider().opacity(0.3)
+                    settingsRow("Per server") {
+                        Stepper("\(config.maxConnectionPerServer)", value: $config.maxConnectionPerServer, in: 1...16)
+                    }
+                }
 
-            settingsSection("System") {
-                Toggle("Start at login", isOn: $config.openAtLogin)
-                Toggle("Tray speedometer", isOn: $config.traySpeedometer)
-                Toggle("Auto check updates", isOn: $config.autoCheckUpdate)
+                settingsCard(icon: "desktopcomputer", title: "System") {
+                    settingsRow("Start at login") {
+                        Toggle("", isOn: $config.openAtLogin).toggleStyle(.switch).labelsHidden()
+                    }
+                    Divider().opacity(0.3)
+                    settingsRow("Tray speedometer") {
+                        Toggle("", isOn: $config.traySpeedometer).toggleStyle(.switch).labelsHidden()
+                    }
+                    Divider().opacity(0.3)
+                    settingsRow("Auto updates") {
+                        Toggle("", isOn: $config.autoCheckUpdate).toggleStyle(.switch).labelsHidden()
+                    }
+                }
             }
         }
     }
 
-    private var advancedTab: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            settingsSection("Speed Limits") {
-                HStack {
-                    Text("Download limit")
-                    Spacer()
-                    TextField("0 = unlimited", value: $config.maxOverallDownloadLimit, format: .number)
-                        .frame(width: 100)
-                    Text("KB/s")
-                        .foregroundStyle(.secondary)
-                }
-                HStack {
-                    Text("Upload limit")
-                    Spacer()
-                    TextField("0 = unlimited", value: $config.maxOverallUploadLimit, format: .number)
-                        .frame(width: 100)
-                    Text("KB/s")
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            settingsSection("BitTorrent") {
-                Toggle("Keep seeding", isOn: $config.keepSeeding)
-                if !config.keepSeeding {
-                    HStack {
-                        Text("Seed ratio")
-                        Spacer()
-                        TextField("2.0", value: $config.seedRatio, format: .number)
-                            .frame(width: 60)
+    private var advancedCards: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(spacing: 12) {
+                settingsCard(icon: "speedometer", title: "Speed Limits") {
+                    settingsRow("Download") {
+                        HStack(spacing: 4) {
+                            TextField("0", value: $config.maxOverallDownloadLimit, format: .number)
+                                .textFieldStyle(.plain)
+                                .font(.system(size: 13, weight: .medium, design: .monospaced))
+                                .foregroundStyle(.white)
+                                .frame(width: 60)
+                                .multilineTextAlignment(.trailing)
+                            Text("KB/s")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.white.opacity(0.4))
+                        }
                     }
-                    Stepper("Seed time: \(config.seedTime) min", value: $config.seedTime, in: 0...14400, step: 60)
+                    Divider().opacity(0.3)
+                    settingsRow("Upload") {
+                        HStack(spacing: 4) {
+                            TextField("0", value: $config.maxOverallUploadLimit, format: .number)
+                                .textFieldStyle(.plain)
+                                .font(.system(size: 13, weight: .medium, design: .monospaced))
+                                .foregroundStyle(.white)
+                                .frame(width: 60)
+                                .multilineTextAlignment(.trailing)
+                            Text("KB/s")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.white.opacity(0.4))
+                        }
+                    }
                 }
-                Toggle("Auto sync trackers", isOn: $config.autoSyncTracker)
-                Toggle("Enable UPnP", isOn: $config.enableUPnP)
+
+                settingsCard(icon: "lock.shield", title: "Security") {
+                    settingsRow("RPC Secret") {
+                        SecureField("Auto-generated", text: $config.rpcSecret)
+                            .textFieldStyle(.plain)
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.8))
+                            .frame(width: 120)
+                    }
+                }
             }
 
-            settingsSection("Security") {
-                HStack {
-                    Text("RPC Secret")
-                    Spacer()
-                    SecureField("Optional", text: $config.rpcSecret)
-                        .frame(width: 150)
+            VStack(spacing: 12) {
+                settingsCard(icon: "point.3.connected.trianglepath.dotted", title: "BitTorrent") {
+                    settingsRow("Keep seeding") {
+                        Toggle("", isOn: $config.keepSeeding).toggleStyle(.switch).labelsHidden()
+                    }
+                    if !config.keepSeeding {
+                        Divider().opacity(0.3)
+                        settingsRow("Seed ratio") {
+                            HStack(spacing: 3) {
+                                TextField("2.0", value: $config.seedRatio, format: .number)
+                                    .textFieldStyle(.plain)
+                                    .font(.system(size: 13, weight: .medium, design: .monospaced))
+                                    .foregroundStyle(.white)
+                                    .frame(width: 40)
+                                    .multilineTextAlignment(.trailing)
+                                Text("×")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(.white.opacity(0.4))
+                            }
+                        }
+                        Divider().opacity(0.3)
+                        settingsRow("Seed time") {
+                            Stepper("\(config.seedTime) min", value: $config.seedTime, in: 0...14400, step: 60)
+                                .font(.system(size: 12))
+                        }
+                    }
+                    Divider().opacity(0.3)
+                    settingsRow("Sync trackers") {
+                        Toggle("", isOn: $config.autoSyncTracker).toggleStyle(.switch).labelsHidden()
+                    }
+                    Divider().opacity(0.3)
+                    settingsRow("UPnP") {
+                        Toggle("", isOn: $config.enableUPnP).toggleStyle(.switch).labelsHidden()
+                    }
                 }
             }
         }
@@ -143,6 +196,44 @@ struct SettingsView: View {
         panel.canChooseFiles = false
         if panel.runModal() == .OK, let url = panel.url {
             config.downloadDir = url.path
+        }
+    }
+
+    @ViewBuilder
+    private func settingsCard<Content: View>(icon: String, title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.blue.opacity(0.9))
+                    .frame(width: 24, height: 24)
+                    .background(Color.blue.opacity(0.12))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                Text(title.uppercased())
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.55))
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                content()
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(Color.white.opacity(0.04))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+        )
+    }
+
+    private func settingsRow<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
+        HStack {
+            Text(label)
+                .font(.system(size: 12))
+                .foregroundStyle(.white.opacity(0.8))
+            Spacer()
+            content()
         }
     }
 
@@ -194,24 +285,5 @@ private extension SettingsView {
             case .advanced: return "gearshape.2"
             }
         }
-    }
-
-    @ViewBuilder
-    func settingsSection<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(title.uppercased())
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.55))
-            VStack(alignment: .leading, spacing: 10) {
-                content()
-            }
-        }
-        .padding(14)
-        .background(Color.white.opacity(0.03))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
-        )
     }
 }
